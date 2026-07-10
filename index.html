@@ -103,6 +103,8 @@
       <button class="btn green" onclick="showWordList()">📚 单词表<span class="desc">先复习一遍，点喇叭听读</span></button>
     </div>
     <div class="tip">💡 家长提示：本游戏用浏览器自带的语音朗读（英式英语），建议用 <b>Chrome / Edge / Safari</b> 打开，首次点击页面后声音才会生效。全部数据在本地，不用联网。</div>
+    <button class="btn gray" style="width:100%;margin-top:12px" onclick="testVoice()">🔊 测试发音（先点这里试一下声音）</button>
+    <div id="voiceTip" class="tip" style="margin-top:10px"></div>
   </div>
 
   <!-- CHALLENGE -->
@@ -166,12 +168,21 @@ const PIC_POOL = ['➡️','⬅️','⬇️','⬆️','🧱','🗺️','📮','�
 
 /* ============ 语音朗读 ============ */
 let voices = [];
+let audioCtx = null;
+function unlockAudio(){
+  try{
+    if(!audioCtx){ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
+    if(audioCtx && audioCtx.state==='suspended'){ audioCtx.resume(); }
+  }catch(e){}
+}
+document.addEventListener('click', unlockAudio);
 function loadVoices(){ try{ voices = window.speechSynthesis.getVoices(); }catch(e){} }
 if('speechSynthesis' in window){ window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); }
 function speak(text){
   if(!('speechSynthesis' in window)) return;
   try{
-    window.speechSynthesis.cancel();
+    unlockAudio();
+    if(window.speechSynthesis.speaking) window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'en-GB'; u.rate = 0.9; u.pitch = 1;
     const v = voices.find(v=>/en-GB/i.test(v.lang)) || voices.find(v=>/^en/i.test(v.lang));
@@ -179,15 +190,25 @@ function speak(text){
     window.speechSynthesis.speak(u);
   }catch(e){}
 }
+function testVoice(){
+  const tip = $('voiceTip');
+  if(!('speechSynthesis' in window)){
+    tip.innerHTML = '⚠️ 当前浏览器不支持语音朗读。请改用 <b>Chrome</b> 浏览器打开（不要用微信内置浏览器）。';
+    return;
+  }
+  speak('Hello, I am your English teacher. Let us learn together!');
+  tip.innerHTML = '🔈 如果没听到声音：① 确认是用 <b>Chrome</b> 打开；② 安卓请到「设置→系统→语言和输入法→文字转语音(TTS)输出」里安装 <b>English</b> 语音包，并把引擎设为 Google 文字转语音。';
+}
 
 /* ============ 音效 ============ */
 function beep(freq, dur){
   try{
-    const ctx = new (window.AudioContext||window.webkitAudioContext)();
-    const o = ctx.createOscillator(), g = ctx.createGain();
+    unlockAudio();
+    if(!audioCtx) return;
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
     o.frequency.value = freq; o.type='sine';
-    g.gain.value = 0.08; o.connect(g); g.connect(ctx.destination);
-    o.start(); setTimeout(()=>{ o.stop(); ctx.close(); }, dur||150);
+    g.gain.value = 0.08; o.connect(g); g.connect(audioCtx.destination);
+    o.start(); setTimeout(()=>{ try{o.stop();}catch(e){} }, dur||150);
   }catch(e){}
 }
 const ok = ()=>beep(880,160);

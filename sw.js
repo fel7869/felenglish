@@ -1,4 +1,4 @@
-const CACHE = 'eg-m1-v1';
+const CACHE = 'eg-m1-v2';
 const FILES = [
   './',
   './index.html',
