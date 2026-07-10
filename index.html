@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ff7eb9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="英语闯关">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>外研版六上 Module 1 · 英语闯关小游戏</title>
+<style>
+  :root{
+    --pink:#ff7eb9; --blue:#5ec6ff; --yellow:#ffd166; --green:#7bd389;
+    --purple:#b18cff; --bg1:#fff4fb; --bg2:#eef6ff; --ink:#3a3a5a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:"Comic Sans MS","PingFang SC","Microsoft YaHei",sans-serif;
+    color:var(--ink); min-height:100vh;
+    background:linear-gradient(135deg,var(--bg1),var(--bg2));
+    -webkit-tap-highlight-color:transparent;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:18px 16px 40px;}
+  h1{font-size:26px; text-align:center; margin:8px 0 2px;}
+  .sub{text-align:center; color:#888; font-size:13px; margin-bottom:14px;}
+  .card{background:#fff; border-radius:20px; padding:18px; box-shadow:0 8px 24px rgba(120,120,180,.15);}
+  .hidden{display:none!important;}
+  .btn{
+    border:none; border-radius:16px; padding:14px 18px; font-size:17px; font-weight:bold;
+    cursor:pointer; color:#fff; transition:transform .08s ease, filter .15s;
+    box-shadow:0 4px 0 rgba(0,0,0,.12);
+  }
+  .btn:active{transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,.12);}
+  .btn.pink{background:var(--pink);} .btn.blue{background:var(--blue);}
+  .btn.yellow{background:var(--yellow); color:#7a5b00;} .btn.green{background:var(--green);}
+  .btn.purple{background:var(--purple);} .btn.gray{background:#b9b9c9; color:#fff;}
+  .menu{display:grid; gap:14px; grid-template-columns:1fr 1fr;}
+  .menu .btn{padding:22px 12px; font-size:18px; line-height:1.4;}
+  .menu .desc{display:block; font-size:12px; font-weight:normal; opacity:.9; margin-top:6px;}
+  .topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .topbar .back{font-size:14px; padding:8px 14px;}
+  .progress{height:12px; background:#eee; border-radius:8px; overflow:hidden; margin:10px 0;}
+  .progress > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--green),var(--blue)); transition:width .25s;}
+  .q{font-size:20px; text-align:center; margin:14px 0; min-height:30px;}
+  .picbig{font-size:64px; text-align:center; margin:6px 0;}
+  .opts{display:grid; gap:10px; grid-template-columns:1fr 1fr;}
+  .opt{
+    background:#f4f7ff; border:2px solid #e2e8ff; border-radius:14px; padding:14px 10px;
+    font-size:18px; cursor:pointer; text-align:center; user-select:none;
+  }
+  .opt.correct{background:#d8f7df; border-color:var(--green);}
+  .opt.wrong{background:#ffe0e0; border-color:#ff8a8a;}
+  .opt:active{transform:scale(.97);}
+  .opt .en{font-size:18px;} .opt .zh{font-size:12px; color:#888; display:block; margin-top:2px;}
+  .speak{display:inline-flex; align-items:center; gap:6px; background:var(--blue); color:#fff;
+    border:none; border-radius:30px; padding:8px 16px; font-size:15px; cursor:pointer; margin:6px auto; box-shadow:0 3px 0 rgba(0,0,0,.12);}
+  .center{text-align:center;}
+  /* spelling */
+  .slots{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:12px 0; min-height:46px;}
+  .slot{width:38px; height:44px; border-bottom:3px solid #c9c9e0; display:flex; align-items:center; justify-content:center; font-size:22px; text-transform:lowercase;}
+  .letters{display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
+  .lt{width:42px; height:46px; border-radius:12px; background:var(--yellow); color:#7a5b00;
+    font-size:22px; font-weight:bold; border:none; cursor:pointer; box-shadow:0 3px 0 rgba(0,0,0,.12);}
+  .lt:active{transform:translateY(2px);}
+  .lt.used{opacity:.25; pointer-events:none;}
+  /* match */
+  .board{position:relative; display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:8px;}
+  .tile{background:#fff; border:2px solid #e2e8ff; border-radius:14px; padding:14px 6px; min-height:58px;
+    display:flex; align-items:center; justify-content:center; font-size:17px; text-align:center; cursor:pointer; user-select:none;}
+  .tile.sel{background:var(--yellow); border-color:#ffb703; transform:scale(1.04);}
+  .tile.bad{background:#ffd9d9; border-color:#ff8a8a; animation:shake .3s;}
+  .tile.gone{visibility:hidden;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  svg.lines{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
+  .stat{display:flex; gap:14px; justify-content:center; margin:8px 0; font-size:14px; color:#666;}
+  /* wordlist */
+  .wl{display:grid; gap:8px; grid-template-columns:1fr 1fr;}
+  .wl .row{display:flex; align-items:center; gap:8px; background:#f7f9ff; border-radius:12px; padding:8px 10px;}
+  .wl .pic{font-size:28px;}
+  .wl .en{font-weight:bold; font-size:16px;}
+  .wl .zh{font-size:12px; color:#888;}
+  .wl .mini{border:none; background:var(--green); color:#fff; border-radius:10px; padding:6px 8px; cursor:pointer; font-size:12px;}
+  .result{text-align:center; margin:18px 0;}
+  .stars{font-size:40px; letter-spacing:6px;}
+  .praise{font-size:20px; margin:10px 0;}
+  .tip{font-size:13px; color:#888; background:#f6f8ff; border-radius:12px; padding:10px 12px; margin-top:14px; line-height:1.6;}
+  .badge{display:inline-block; background:var(--purple); color:#fff; border-radius:20px; padding:4px 12px; font-size:13px; margin-bottom:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🏯 外研版六上 · Module 1 闯关</h1>
+  <div class="sub">长城与距离 · 边玩边学 · 点喇叭可听真人发音（英式英语）</div>
+
+  <!-- HOME -->
+  <div id="home" class="card">
+    <div class="menu">
+      <button class="btn pink" onclick="startChallenge()">🎯 综合闯关<span class="desc">听力+认读+拼写+句子，闯关拿星星</span></button>
+      <button class="btn blue" onclick="startMatch()">🔗 单词连连看<span class="desc">翻牌配对，找出英文和中文的一家</span></button>
+      <button class="btn yellow" onclick="startListen()">👂 听力看图片<span class="desc">听发音，选出正确的图</span></button>
+      <button class="btn green" onclick="showWordList()">📚 单词表<span class="desc">先复习一遍，点喇叭听读</span></button>
+    </div>
+    <div class="tip">💡 家长提示：本游戏用浏览器自带的语音朗读（英式英语），建议用 <b>Chrome / Edge / Safari</b> 打开，首次点击页面后声音才会生效。全部数据在本地，不用联网。</div>
+  </div>
+
+  <!-- CHALLENGE -->
+  <div id="challenge" class="card hidden">
+    <div class="topbar"><button class="btn gray back" onclick="goHome()">← 返回</button><span id="chTitle">综合闯关</span></div>
+    <div class="progress"><i id="chBar"></i></div>
+    <div id="chBody"></div>
+  </div>
+
+  <!-- MATCH -->
+  <div id="match" class="card hidden">
+    <div class="topbar"><button class="btn gray back" onclick="goHome()">← 返回</button><span>单词连连看</span></div>
+    <div class="stat"><span>⏱️ 用时：<b id="mTime">0</b>秒</span><span>👣 步数：<b id="mSteps">0</b></span></div>
+    <div style="position:relative">
+      <div id="matchBoard" class="board"></div>
+      <svg class="lines" id="mLines"></svg>
+    </div>
+    <div class="center" style="margin-top:14px;"><button class="btn blue" onclick="startMatch()">🔄 再来一局</button></div>
+  </div>
+
+  <!-- LISTEN -->
+  <div id="listen" class="card hidden">
+    <div class="topbar"><button class="btn gray back" onclick="goHome()">← 返回</button><span>听力看图片</span></div>
+    <div class="progress"><i id="lnBar"></i></div>
+    <div id="lnBody"></div>
+  </div>
+
+  <!-- WORDLIST -->
+  <div id="wordlist" class="card hidden">
+    <div class="topbar"><button class="btn gray back" onclick="goHome()">← 返回</button><span>Module 1 单词表</span></div>
+    <div class="wl" id="wlGrid"></div>
+  </div>
+</div>
+
+<script>
+/* ============ 数据：外研版六上 Module 1 ============ */
+const WORDS = [
+  {en:'postcard',  zh:'明信片',         pic:'📮'},
+  {en:'more than', zh:'超过；不止',     pic:'➕'},
+  {en:'thousand',  zh:'一千',           pic:'🔢'},
+  {en:'kilometre', zh:'千米；公里',     pic:'📏'},
+  {en:'million',   zh:'一百万',         pic:'💯'},
+  {en:'map',       zh:'地图',           pic:'🗺️'},
+  {en:'right',     zh:'正确的；右边',   pic:'✅'},
+  {en:'country',   zh:'国家',           pic:'🏳️'},
+  {en:'east',      zh:'东；东部',       pic:'➡️'},
+  {en:'west',      zh:'西；西部',       pic:'⬅️'},
+  {en:'south',     zh:'南；南部',       pic:'⬇️'},
+  {en:'north',     zh:'北；北部',       pic:'⬆️'},
+  {en:'Great Wall',zh:'长城',           pic:'🧱'}
+];
+const SENTENCES = [
+  {text:'New York is in the east.',   pic:'➡️'},
+  {text:'Houston is in the south.',   pic:'⬇️'},
+  {en:'Beijing is in the north.',     pic:'⬆️'},
+  {text:'The Great Wall is in China.',pic:'🧱'},
+  {text:'It is a picture of a map.',  pic:'🗺️'},
+  {text:'This is a postcard.',        pic:'📮'}
+];
+const PIC_POOL = ['➡️','⬅️','⬇️','⬆️','🧱','🗺️','📮','🏳️','📏','💯'];
+
+/* ============ 语音朗读 ============ */
+let voices = [];
+function loadVoices(){ try{ voices = window.speechSynthesis.getVoices(); }catch(e){} }
+if('speechSynthesis' in window){ window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); }
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  try{
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-GB'; u.rate = 0.9; u.pitch = 1;
+    const v = voices.find(v=>/en-GB/i.test(v.lang)) || voices.find(v=>/^en/i.test(v.lang));
+    if(v) u.voice = v;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ============ 音效 ============ */
+function beep(freq, dur){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.value = freq; o.type='sine';
+    g.gain.value = 0.08; o.connect(g); g.connect(ctx.destination);
+    o.start(); setTimeout(()=>{ o.stop(); ctx.close(); }, dur||150);
+  }catch(e){}
+}
+const ok = ()=>beep(880,160);
+const no = ()=>beep(220,200);
+
+/* ============ 工具 ============ */
+function $(id){ return document.getElementById(id); }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function show(id){ ['home','challenge','match','listen','wordlist'].forEach(x=>$(x).classList.add('hidden')); $(id).classList.remove('hidden'); }
+function goHome(){ show('home'); }
+function pickOptions(correct, pool, n){
+  const others = shuffle(pool.filter(w=>w.en!==correct.en)).slice(0, n-1);
+  return shuffle(others.concat([correct]));
+}
+
+/* ============ 综合闯关 ============ */
+let ch = null;
+function startChallenge(){
+  show('challenge');
+  const listenQ = shuffle(WORDS).slice(0,4);
+  const readQ   = shuffle(WORDS).slice(0,4);
+  const spellQ  = shuffle(WORDS.filter(w=>!w.en.includes(' '))).slice(0,3);
+  const sentQ   = shuffle(SENTENCES).slice(0,3);
+  const qs = [];
+  listenQ.forEach(w=>qs.push({type:'listen', w}));
+  readQ.forEach(w=>qs.push({type:'read', w}));
+  spellQ.forEach(w=>qs.push({type:'spell', w}));
+  sentQ.forEach(s=>qs.push({type:'sentence', s}));
+  ch = {qs, idx:0, score:0, total:qs.length};
+  renderChallenge();
+}
+function renderChallenge(){
+  const bar = $('chBar'); bar.style.width = (ch.idx/ch.total*100)+'%';
+  if(ch.idx>=ch.total){ return finishChallenge(); }
+  const q = ch.qs[ch.idx];
+  const body = $('chBody'); body.innerHTML='';
+  const prompt = document.createElement('div'); prompt.className='q';
+  const optBox = document.createElement('div'); optBox.className='opts';
+
+  if(q.type==='listen'){
+    prompt.innerHTML = '🔊 听一听，选中文意思：';
+    const sBtn = document.createElement('button'); sBtn.className='speak'; sBtn.innerHTML='🔊 再听一次';
+    sBtn.onclick=()=>speak(q.w.en); body.appendChild(sBtn);
+    body.appendChild(prompt);
+    const opts = pickOptions(q.w, WORDS, 4);
+    opts.forEach(o=>{
+      const d=document.createElement('div'); d.className='opt'; d.innerHTML='<span class="zh">'+o.zh+'</span>';
+      d.onclick=()=>answer(d, o.en===q.w.en, ()=>{ if(o.en===q.w.en) speak(q.w.en); });
+      optBox.appendChild(d);
+    });
+    speak(q.w.en);
+  }
+  else if(q.type==='read'){
+    prompt.innerHTML = '📖 中文「'+q.w.zh+'」，选正确英文：';
+    body.appendChild(prompt);
+    const opts = pickOptions(q.w, WORDS, 4);
+    opts.forEach(o=>{
+      const d=document.createElement('div'); d.className='opt'; d.innerHTML='<span class="en">'+o.en+'</span>';
+      const sp=document.createElement('button'); sp.className='speak'; sp.style.margin='4px'; sp.innerHTML='🔊'; sp.onclick=(e)=>{e.stopPropagation();speak(o.en);};
+      d.appendChild(sp);
+      d.onclick=()=>answer(d, o.en===q.w.en, ()=>speak(q.w.en));
+      optBox.appendChild(d);
+    });
+  }
+  else if(q.type==='pic'){
+    prompt.innerHTML = '🖼️ 看图片，选正确英文：';
+    const big=document.createElement('div'); big.className='picbig'; big.textContent=q.w.pic; body.appendChild(big);
+    body.appendChild(prompt);
+    const opts = pickOptions(q.w, WORDS, 4);
+    opts.forEach(o=>{
+      const d=document.createElement('div'); d.className='opt'; d.innerHTML='<span class="en">'+o.en+'</span>';
+      const sp=document.createElement('button'); sp.className='speak'; sp.style.margin='4px'; sp.innerHTML='🔊'; sp.onclick=(e)=>{e.stopPropagation();speak(o.en);};
+      d.appendChild(sp);
+      d.onclick=()=>answer(d, o.en===q.w.en, ()=>speak(q.w.en));
+      optBox.appendChild(d);
+    });
+  }
+  else if(q.type==='spell'){
+    prompt.innerHTML = '✏️ 拼出单词：'+q.w.zh+' '+q.w.pic;
+    body.appendChild(prompt);
+    const sp=document.createElement('button'); sp.className='speak'; sp.innerHTML='🔊 听发音'; sp.onclick=()=>speak(q.w.en); body.appendChild(sp);
+    const slots=document.createElement('div'); slots.className='slots';
+    const letters=document.createElement('div'); letters.className='letters';
+    const target=q.w.en; const arr=target.split('');
+    const slotsArr=arr.map(()=>null);
+    arr.forEach(()=>{ const s=document.createElement('div'); s.className='slot'; slots.appendChild(s); });
+    const pool=shuffle(arr);
+    pool.forEach(ch2=>{
+      const b=document.createElement('button'); b.className='lt'; b.textContent=ch2;
+      b.onclick=()=>{
+        const i=slotsArr.indexOf(null); if(i<0) return;
+        slotsArr[i]=ch2; slots.children[i].textContent=ch2; b.classList.add('used');
+        if(!slotsArr.includes(null)){ setTimeout(checkSpell,200); }
+      };
+      letters.appendChild(b);
+    });
+    function checkSpell(){
+      const got=slotsArr.join(''); const right=got===target;
+      if(right) ok(); else no();
+      slots.children[0].parentNode.querySelectorAll('.slot').forEach((s,i)=>{ s.style.color = (arr[i]===got[i])?'#2a9d4a':'#d23'; });
+      ch.score += right?1:0;
+      const next=document.createElement('button'); next.className='btn '+(right?'green':'pink'); next.style.marginTop='12px';
+      next.textContent= right?'✅ 拼对啦，下一题':'❌ 正确是 '+target+'，继续';
+      next.onclick=()=>{ speak(target); ch.idx++; renderChallenge(); };
+      body.appendChild(next);
+    }
+    body.appendChild(slots); body.appendChild(letters);
+    return;
+  }
+  else if(q.type==='sentence'){
+    prompt.innerHTML = '📝 读句子，选对应图片：';
+    const sBtn=document.createElement('button'); sBtn.className='speak'; sBtn.innerHTML='🔊 听句子'; sBtn.onclick=()=>speak(q.s.text); body.appendChild(sBtn);
+    const st=document.createElement('div'); st.className='q'; st.textContent=q.s.text; body.appendChild(st);
+    const opts=shuffle(PIC_POOL.filter(p=>p!==q.s.pic)).slice(0,3).concat([q.s.pic]);
+    shuffle(opts).forEach(p=>{
+      const d=document.createElement('div'); d.className='opt'; d.innerHTML='<div style="font-size:40px">'+p+'</div>';
+      d.onclick=()=>answer(d, p===q.s.pic, ()=>speak(q.s.text));
+      optBox.appendChild(d);
+    });
+    speak(q.s.text);
+  }
+  body.appendChild(optBox);
+}
+function answer(el, correct, after){
+  if(el.classList.contains('correct')||el.classList.contains('wrong')) return;
+  if(correct){ el.classList.add('correct'); ok(); ch.score++; }
+  else { el.classList.add('wrong'); no(); }
+  if(after) after();
+  setTimeout(()=>{ ch.idx++; renderChallenge(); }, correct?700:1100);
+}
+function finishChallenge(){
+  const pct = Math.round(ch.score/ch.total*100);
+  const stars = pct>=90?'⭐⭐⭐': pct>=70?'⭐⭐':'⭐';
+  const praise = pct>=90?'太棒了！你是英语小达人！🎉': pct>=70?'不错哦，继续加油！💪':'再练一次，你一定能行！🌟';
+  $('chBar').style.width='100%';
+  $('chBody').innerHTML =
+    '<div class="result"><div class="stars">'+stars+'</div>'+
+    '<div class="praise">'+praise+'</div>'+
+    '<div>得分：'+ch.score+' / '+ch.total+'（'+pct+'%）</div>'+
+    '<div style="margin-top:16px"><button class="btn pink" onclick="startChallenge()">🔄 再闯一次</button> '+
+    '<button class="btn gray" onclick="goHome()">🏠 回家</button></div></div>';
+}
+
+/* ============ 单词连连看 ============ */
+let mSel=null, mSteps=0, mTimer=null, mSec=0, mLocked=false;
+function startMatch(){
+  show('match');
+  const old=document.getElementById('mWinMsg'); if(old) old.remove();
+  $('mLines').innerHTML='';
+  mSel=null; mSteps=0; mSec=0; mLocked=false; $('mSteps').textContent='0'; $('mTime').textContent='0';
+  clearInterval(mTimer); mTimer=setInterval(()=>{ mSec++; $('mTime').textContent=mSec; },1000);
+  const chosen = shuffle(WORDS).slice(0,6);
+  let tiles=[];
+  chosen.forEach(w=>{ tiles.push({key:w.en,text:w.en,kind:'en'}); tiles.push({key:w.en,text:w.zh,kind:'zh'}); });
+  tiles=shuffle(tiles);
+  const board=$('matchBoard'); board.innerHTML='';
+  tiles.forEach((t,i)=>{
+    const d=document.createElement('div'); d.className='tile'; d.textContent=t.text; d.dataset.i=i; d.dataset.key=t.key; d.dataset.kind=t.kind;
+    d.onclick=()=>onTile(d);
+    board.appendChild(d);
+  });
+}
+function onTile(d){
+  if(mLocked) return;
+  if(d.classList.contains('gone')||d.classList.contains('sel')) return;
+  if(mSel && mSel===d) return;
+  d.classList.add('sel');
+  if(!mSel){ mSel=d; return; }
+  mSteps++; $('mSteps').textContent=mSteps;
+  const a=mSel, b=d;
+  if(a.dataset.key===b.dataset.key && a.dataset.kind!==b.dataset.kind){
+    // match!
+    ok();
+    drawLine(a,b);
+    a.classList.add('gone'); b.classList.add('gone');
+    a.classList.remove('sel'); b.classList.remove('sel');
+    mSel=null;
+    setTimeout(()=>{ $('mLines').innerHTML=''; checkMatchWin(); }, 350);
+  } else {
+    no();
+    mLocked=true;
+    a.classList.add('bad'); b.classList.add('bad');
+    setTimeout(()=>{ a.classList.remove('sel','bad'); b.classList.remove('sel','bad'); mSel=null; mLocked=false; }, 500);
+  }
+}
+function centerOf(el){
+  const board=$('matchBoard').getBoundingClientRect();
+  const r=el.getBoundingClientRect();
+  return {x:r.left-board.left+r.width/2, y:r.top-board.top+r.height/2};
+}
+function drawLine(a,b){
+  const p1=centerOf(a), p2=centerOf(b);
+  const svg=$('mLines');
+  const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',p1.x); line.setAttribute('y1',p1.y);
+  line.setAttribute('x2',p2.x); line.setAttribute('y2',p2.y);
+  line.setAttribute('stroke','#ff7eb9'); line.setAttribute('stroke-width','5'); line.setAttribute('stroke-linecap','round');
+  svg.appendChild(line);
+}
+function checkMatchWin(){
+  const left=document.querySelectorAll('#matchBoard .tile:not(.gone)').length;
+  if(left===0){
+    clearInterval(mTimer);
+    const board=$('matchBoard');
+    const msg=document.createElement('div'); msg.className='center'; msg.id='mWinMsg'; msg.style.marginTop='10px';
+    msg.innerHTML='🎉 全部配对成功！用时 '+mSec+' 秒，走了 '+mSteps+' 步！';
+    board.parentNode.insertBefore(msg, board.nextSibling);
+  }
+}
+
+/* ============ 听力看图片 ============ */
+let ln=null;
+function startListen(){
+  show('listen');
+  const qs = shuffle(WORDS.filter(w=>!w.en.includes(' '))).slice(0,8);
+  ln = {qs, idx:0, score:0, total:qs.length};
+  renderListen();
+}
+function renderListen(){
+  $('lnBar').style.width=(ln.idx/ln.total*100)+'%';
+  if(ln.idx>=ln.total) return finishListen();
+  const q=ln.qs[ln.idx]; const body=$('lnBody'); body.innerHTML='';
+  const prompt=document.createElement('div'); prompt.className='q'; prompt.innerHTML='👂 听发音，选出正确的图：';
+  const sBtn=document.createElement('button'); sBtn.className='speak'; sBtn.innerHTML='🔊 再听一次'; sBtn.onclick=()=>speak(q.en);
+  body.appendChild(sBtn); body.appendChild(prompt);
+  const pics=shuffle(PIC_POOL.filter(p=>p!==q.pic)).slice(0,3).concat([q.pic]);
+  const optBox=document.createElement('div'); optBox.className='opts';
+  shuffle(pics).forEach(p=>{
+    const d=document.createElement('div'); d.className='opt'; d.innerHTML='<div style="font-size:44px">'+p+'</div>';
+    d.onclick=()=>{
+      if(d.classList.contains('correct')||d.classList.contains('wrong')) return;
+      if(p===q.pic){ d.classList.add('correct'); ok(); ln.score++; }
+      else { d.classList.add('wrong'); no(); }
+      speak(q.en);
+      setTimeout(()=>{ ln.idx++; renderListen(); }, 800);
+    };
+    optBox.appendChild(d);
+  });
+  body.appendChild(optBox);
+  speak(q.en);
+}
+function finishListen(){
+  $('lnBar').style.width='100%';
+  const pct=Math.round(ln.score/ln.total*100);
+  const stars=pct>=90?'⭐⭐⭐':pct>=70?'⭐⭐':'⭐';
+  $('lnBody').innerHTML='<div class="result"><div class="stars">'+stars+'</div>'+
+    '<div class="praise">'+(pct>=90?'耳朵真灵！👂✨':pct>=70?'听得不错，继续练！':'多听几遍就好啦！')+'</div>'+
+    '<div>答对：'+ln.score+' / '+ln.total+'（'+pct+'%）</div>'+
+    '<div style="margin-top:16px"><button class="btn yellow" onclick="startListen()">🔄 再来一次</button> '+
+    '<button class="btn gray" onclick="goHome()">🏠 回家</button></div></div>';
+}
+
+/* ============ 单词表 ============ */
+function showWordList(){
+  show('wordlist');
+  const g=$('wlGrid'); g.innerHTML='';
+  WORDS.forEach(w=>{
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML='<span class="pic">'+w.pic+'</span><span><span class="en">'+w.en+'</span><br><span class="zh">'+w.zh+'</span></span>';
+    const b=document.createElement('button'); b.className='mini'; b.textContent='🔊'; b.style.marginLeft='auto';
+    b.onclick=()=>speak(w.en);
+    row.appendChild(b); g.appendChild(row);
+  });
+}
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(e){ console.log('SW fail', e); });
+  });
+}
+</script>
+</body>
+</html>
