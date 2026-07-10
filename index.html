@@ -488,7 +488,14 @@ function showWordList(){
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('sw.js').catch(function(e){ console.log('SW fail', e); });
+    // 清掉手机上残留的旧 Service Worker，避免一直显示没声音的老页面
+    navigator.serviceWorker.getRegistrations().then(function(regs){
+      regs.forEach(function(r){ r.unregister(); });
+    });
+    // 只有本目录确实存在 sw.js 才注册（网络优先）；没有就当普通网页，永远用最新文件
+    fetch('sw.js',{method:'HEAD'}).then(function(res){
+      if(res.ok){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
+    }).catch(function(){});
   });
 }
 </script>
