@@ -1,7 +1,7 @@
 {
-  "name": "外研版六上 Module 1 英语闯关",
+  "name": "外研版六年级英语闯关",
   "short_name": "英语闯关",
-  "description": "外研版六年级上册 Module 1 英语小游戏，边玩边学（长城与距离）",
+  "description": "外研版六年级上册英语小游戏（Module 1 & 2），边玩边学，离线可发音",
   "lang": "zh-CN",
   "start_url": "index.html",
   "scope": ".",
