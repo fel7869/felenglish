@@ -108,6 +108,10 @@
   </div>
 </div>
 <div id="home" class="card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div style="font-size:18px;font-weight:bold" id="modName">Module 1 · 长城与国家</div>
+    <button class="btn gray" style="padding:8px 14px;font-size:14px" onclick="show('modsel')">📚 选模块</button>
+  </div>
     <div class="menu">
       <button class="btn pink" onclick="startChallenge()">🎯 综合闯关<span class="desc">听力+认读+拼写+句子，闯关拿星星</span></button>
       <button class="btn blue" onclick="startMatch()">🔗 单词连连看<span class="desc">翻牌配对，找出英文和中文的一家</span></button>
@@ -121,14 +125,14 @@
 
   <!-- CHALLENGE -->
   <div id="challenge" class="card hidden">
-    <div class="topbar"><button class="btn gray back" onclick="goHome()">← 返回</button><span id="chTitle">综合闯关</span></div>
+    <div class="topbar"><button class="btn gray back" onclick="goHome()">← 返回</button><button class="btn gray" style="font-size:14px;padding:8px 14px" onclick="show('modsel')">📚 选模块</button><span id="chTitle">综合闯关</span></div>
     <div class="progress"><i id="chBar"></i></div>
     <div id="chBody"></div>
   </div>
 
   <!-- MATCH -->
   <div id="match" class="card hidden">
-    <div class="topbar"><button class="btn gray back" onclick="goHome()">← 返回</button><span>单词连连看</span></div>
+    <div class="topbar"><button class="btn gray back" onclick="goHome()">← 返回</button><button class="btn gray" style="font-size:14px;padding:8px 14px" onclick="show('modsel')">📚 选模块</button><span>单词连连看</span></div>
     <div class="stat"><span>⏱️ 用时：<b id="mTime">0</b>秒</span><span>👣 步数：<b id="mSteps">0</b></span></div>
     <div style="position:relative">
       <div id="matchBoard" class="board"></div>
@@ -139,14 +143,14 @@
 
   <!-- LISTEN -->
   <div id="listen" class="card hidden">
-    <div class="topbar"><button class="btn gray back" onclick="goHome()">← 返回</button><span>听力看图片</span></div>
+    <div class="topbar"><button class="btn gray back" onclick="goHome()">← 返回</button><button class="btn gray" style="font-size:14px;padding:8px 14px" onclick="show('modsel')">📚 选模块</button><span>听力看图片</span></div>
     <div class="progress"><i id="lnBar"></i></div>
     <div id="lnBody"></div>
   </div>
 
   <!-- WORDLIST -->
   <div id="wordlist" class="card hidden">
-    <div class="topbar"><button class="btn gray back" onclick="goHome()">← 返回</button><span>Module 1 单词表</span></div>
+    <div class="topbar"><button class="btn gray back" onclick="goHome()">← 返回</button><button class="btn gray" style="font-size:14px;padding:8px 14px" onclick="show('modsel')">📚 选模块</button><span>Module 1 单词表</span></div>
     <div class="wl" id="wlGrid"></div>
   </div>
 </div>
