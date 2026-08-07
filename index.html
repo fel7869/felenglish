@@ -1,1016 +1,580 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>一剪梅 · 诗词背诵小游戏</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>🌟 背诗小游戏</title>
 <style>
-  :root {
-    --bg: #f5f0e8;
-    --card: #fffef9;
-    --text: #3a3226;
-    --text-light: #6b5e4a;
-    --accent: #b5343a;
-    --accent-light: #d4745c;
-    --gold: #c9a44b;
-    --gold-light: #e8d5a3;
-    --green: #5a8a6a;
-    --green-light: #c8e6c9;
-    --red: #c0392b;
-    --shadow: rgba(58,50,38,0.08);
-    --radius: 16px;
-    --font-title: 'STKaiti', 'KaiTi', '楷体', 'FangSong', '仿宋', 'SimSun', '宋体', serif;
-    --font-body: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', sans-serif;
-    --safe-bottom: env(safe-area-inset-bottom, 16px);
+  :root{
+    --bg1:#ffe9b3; --bg2:#ffd1dc; --bg3:#b3e5ff;
+    --card:#ffffff; --ink:#3a2e2e; --accent:#ff7a59; --accent2:#5b8def;
+    --good:#3ec46d; --soft:#fff6e6; --fs:22px;
   }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
-  body {
-    font-family: var(--font-body);
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-    user-select: none;
-    -webkit-user-select: none;
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; height:100%;}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+    color:var(--ink); font-size:var(--fs);
+    background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));
+    background-size:400% 400%; animation:bgshift 18s ease infinite;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
   }
-
-  /* ===== 花瓣飘落背景 ===== */
-  .petals-container {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none; z-index: 0; overflow: hidden;
-  }
-  .petal {
-    position: absolute; top: -40px;
-    font-size: 22px; opacity: 0.35;
-    animation: fall linear infinite;
-  }
-  @keyframes fall {
-    0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.35; }
-    25%  { opacity: 0.5; }
-    50%  { transform: translateY(50vh) rotate(180deg) scale(0.8); opacity: 0.25; }
-    75%  { opacity: 0.4; }
-    100% { transform: translateY(105vh) rotate(360deg) scale(0.6); opacity: 0; }
-  }
-
-  /* ===== 主容器 ===== */
-  .app-container {
-    position: relative; z-index: 1;
-    max-width: 480px; margin: 0 auto;
-    padding: 0 16px; padding-bottom: var(--safe-bottom);
-    min-height: 100vh; display: flex; flex-direction: column;
-  }
-
-  /* ===== 顶部导航 ===== */
-  .top-bar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 0; position: sticky; top: 0; z-index: 10;
-    background: var(--bg); gap: 12px;
-  }
-  .top-bar .back-btn {
-    width: 40px; height: 40px; border: none; background: var(--card);
-    border-radius: 50%; font-size: 20px; color: var(--text);
-    cursor: pointer; box-shadow: 0 2px 8px var(--shadow);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; transition: transform 0.2s;
-  }
-  .top-bar .back-btn:active { transform: scale(0.93); }
-  .progress-wrap {
-    flex: 1; height: 8px; background: #e0d9cd; border-radius: 4px;
-    overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%; background: linear-gradient(90deg, var(--accent-light), var(--accent));
-    border-radius: 4px; transition: width 0.5s ease;
-    width: 0%;
-  }
-  .progress-label {
-    font-size: 12px; color: var(--text-light); flex-shrink: 0;
-    min-width: 36px; text-align: right;
-  }
-  .score-badge {
-    display: flex; align-items: center; gap: 4px;
-    font-size: 14px; font-weight: 600; color: var(--gold);
-    flex-shrink: 0;
-  }
-  .score-badge .star { font-size: 18px; }
-
-  /* ===== 页面容器 ===== */
-  .page {
-    display: none; flex-direction: column; flex: 1;
-    animation: fadeSlideIn 0.35s ease;
-  }
-  .page.active { display: flex; }
-  @keyframes fadeSlideIn {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ===== 首页 ===== */
-  .home-page { align-items: center; justify-content: center; text-align: center; }
-  .seal-badge {
-    width: 80px; height: 80px; border: 3px solid var(--accent); border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-title); font-size: 36px; color: var(--accent);
-    transform: rotate(-5deg); margin-bottom: 20px;
-    box-shadow: 0 4px 16px var(--shadow);
-  }
-  .home-page h1 {
-    font-family: var(--font-title); font-size: 30px;
-    color: var(--accent); line-height: 1.3; margin-bottom: 4px;
-  }
-  .home-page .subtitle {
-    font-size: 14px; color: var(--text-light); margin-bottom: 8px;
-  }
-  .home-page .author {
-    font-family: var(--font-title); font-size: 18px;
-    color: var(--text-light); margin-bottom: 28px;
-  }
-  .home-divider {
-    width: 60px; height: 2px; background: var(--gold);
-    margin: 0 auto 24px; border-radius: 1px;
-  }
-  .home-btns { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 300px; }
-  .btn {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 16px 24px; border: none; border-radius: var(--radius);
-    font-size: 17px; font-weight: 600; cursor: pointer;
-    font-family: var(--font-body); transition: all 0.2s;
-    position: relative; overflow: hidden;
-    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
-  }
-  .btn:active { transform: scale(0.96); }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--accent), #a02c30);
-    color: #fff; box-shadow: 0 4px 16px rgba(181,52,58,0.3);
-  }
-  .btn-outline {
-    background: var(--card); color: var(--accent);
-    border: 2px solid var(--accent);
-  }
-  .btn-ghost {
-    background: transparent; color: var(--text-light);
-    font-weight: 500; padding: 12px;
-  }
-  .btn-resume {
-    background: linear-gradient(135deg, var(--gold), #b8923a);
-    color: #fff; box-shadow: 0 4px 16px rgba(201,164,75,0.35);
-  }
-
-  /* ===== 学习页面 ===== */
-  .learn-page { padding-top: 8px; }
-  .learn-header {
-    text-align: center; margin-bottom: 16px;
-  }
-  .learn-header h2 {
-    font-family: var(--font-title); font-size: 22px; color: var(--accent);
-  }
-  .full-poem {
-    background: var(--card); border-radius: var(--radius);
-    padding: 20px 18px; box-shadow: 0 2px 12px var(--shadow);
-    font-family: var(--font-title); font-size: 18px;
-    line-height: 2.2; letter-spacing: 1px; color: var(--text);
-    text-align: center; border: 1px solid #e8e0d3;
-    margin-bottom: 16px;
-  }
-  .full-poem .highlight-line {
-    display: inline-block; padding: 2px 8px; margin: 0 2px;
-    border-radius: 6px; cursor: pointer; transition: all 0.2s;
-    position: relative;
-  }
-  .full-poem .highlight-line.tapped {
-    background: #fff3e0; color: var(--accent);
-    font-weight: bold;
-  }
-  .meaning-card {
-    background: #faf6ee; border-radius: 12px; padding: 16px 18px;
-    border-left: 3px solid var(--gold); margin-top: 12px;
-    display: none; font-size: 14px; color: var(--text-light);
-    line-height: 1.7; animation: fadeSlideIn 0.3s ease;
-  }
-  .meaning-card.show { display: block; }
-  .meaning-card .original { font-weight: 600; color: var(--accent); margin-bottom: 4px; }
-
-  /* ===== 闯关页面 ===== */
-  .challenge-page { align-items: center; }
-  .challenge-card {
-    background: var(--card); border-radius: var(--radius);
-    padding: 28px 20px 24px; box-shadow: 0 4px 20px var(--shadow);
-    width: 100%; text-align: center; border: 1px solid #e8e0d3;
-    margin-top: 8px;
-  }
-  .challenge-number {
-    font-size: 13px; color: var(--text-light); letter-spacing: 2px;
-    margin-bottom: 4px;
-  }
-  .challenge-type-badge {
-    display: inline-block; padding: 3px 14px; border-radius: 20px;
-    font-size: 12px; font-weight: 600; letter-spacing: 1px;
-    margin-bottom: 16px;
-  }
-  .badge-fill { background: #fce4ec; color: var(--accent); }
-  .badge-sort { background: #e8f5e9; color: var(--green); }
-
-  /* 填空模式 */
-  .fill-sentence {
-    font-family: var(--font-title); font-size: 26px;
-    letter-spacing: 6px; margin: 20px 0 24px;
-    display: flex; align-items: center; justify-content: center;
-    flex-wrap: wrap; gap: 4px; line-height: 1.6;
-  }
-  .fill-sentence .blank {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 44px; height: 44px; border: 2px dashed var(--accent);
-    border-radius: 8px; color: var(--accent); font-size: 22px;
-    margin: 0 4px; transition: all 0.3s;
-  }
-  .fill-sentence .blank.filled {
-    border-style: solid; background: #fce4ec;
-    animation: popIn 0.3s ease;
-  }
-  @keyframes popIn {
-    0% { transform: scale(0.5); opacity: 0; }
-    60% { transform: scale(1.15); }
-    100% { transform: scale(1); opacity: 1; }
-  }
-  .fill-sentence .comma { color: var(--text); letter-spacing: 0; }
-  .options-grid {
-    display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
-    margin: 8px 0 20px;
-  }
-  .option-btn {
-    width: 52px; height: 52px; border: 2px solid #d5cdbb;
-    border-radius: 12px; background: var(--card);
-    font-family: var(--font-title); font-size: 22px; color: var(--text);
-    cursor: pointer; transition: all 0.2s;
-    touch-action: manipulation;
-  }
-  .option-btn:active { transform: scale(0.9); }
-  .option-btn.chosen { border-color: var(--accent); background: #fce4ec; color: var(--accent); }
-  .option-btn.correct { border-color: var(--green); background: var(--green-light); color: var(--green); animation: popIn 0.3s ease; }
-  .option-btn.wrong { border-color: var(--red); background: #ffebee; color: var(--red); animation: shake 0.5s ease; }
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-6px); }
-    50% { transform: translateX(6px); }
-    75% { transform: translateX(-4px); }
-  }
-
-  /* 排序模式 */
-  .sort-target {
-    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
-    min-height: 56px; padding: 12px; margin: 16px 0;
-    border: 2px dashed #d5cdbb; border-radius: 12px;
-    background: #faf8f3; align-items: center;
-  }
-  .sort-target.filled { border-color: var(--green); border-style: solid; }
-  .sort-chunk {
-    display: inline-flex; align-items: center; justify-content: center;
-    padding: 8px 14px; border-radius: 10px;
-    font-family: var(--font-title); font-size: 18px; letter-spacing: 1px;
-    cursor: pointer; transition: all 0.2s;
-    touch-action: manipulation; user-select: none;
-  }
-  .sort-chunk.in-pool {
-    background: var(--card); border: 1.5px solid #d5cdbb; color: var(--text);
-    box-shadow: 0 2px 6px var(--shadow);
-  }
-  .sort-chunk.in-target {
-    background: #e8f5e9; border: 1.5px solid var(--green); color: var(--green);
-    box-shadow: 0 2px 6px var(--shadow);
-  }
-  .sort-chunk:active { transform: scale(0.92); }
-  .sort-pool {
-    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
-    margin: 12px 0;
-  }
-  .sort-hint {
-    font-size: 13px; color: var(--text-light); margin-bottom: 6px;
-  }
-
-  /* 反馈信息 */
-  .feedback {
-    padding: 10px 18px; border-radius: 10px; font-size: 15px;
-    font-weight: 600; margin: 12px 0; display: none;
-    animation: fadeSlideIn 0.3s ease;
-  }
-  .feedback.show { display: block; }
-  .feedback.success { background: var(--green-light); color: var(--green); }
-  .feedback.error { background: #ffebee; color: var(--red); }
-  .feedback .meaning-hint {
-    display: block; font-weight: 400; font-size: 13px; margin-top: 4px;
-    color: var(--text-light);
-  }
-
-  .btn-next {
-    display: none; margin-top: 8px;
-  }
-  .btn-next.show { display: inline-flex; }
-  .btn-sm {
-    padding: 12px 28px; font-size: 15px;
-  }
-
-  /* ===== 结果页面 ===== */
-  .result-page { align-items: center; justify-content: center; text-align: center; }
-  .result-icon { font-size: 64px; margin-bottom: 12px; }
-  .result-title {
-    font-family: var(--font-title); font-size: 26px; color: var(--accent);
-    margin-bottom: 8px;
-  }
-  .result-score { font-size: 48px; font-weight: 700; color: var(--gold); }
-  .result-stats {
-    display: flex; gap: 24px; margin: 20px 0;
-  }
-  .result-stat { text-align: center; }
-  .result-stat .num { font-size: 28px; font-weight: 700; color: var(--accent); }
-  .result-stat .label { font-size: 12px; color: var(--text-light); margin-top: 2px; }
-  .result-poem {
-    background: var(--card); border-radius: var(--radius);
-    padding: 20px; box-shadow: 0 2px 12px var(--shadow);
-    font-family: var(--font-title); font-size: 16px;
-    line-height: 2.2; color: var(--text); width: 100%;
-    border: 1px solid #e8e0d3; margin: 16px 0;
-  }
-  .combo-text {
-    font-size: 14px; color: var(--gold); font-weight: 600;
-    margin: 8px 0; min-height: 20px;
-  }
-
-  /* ===== Toast ===== */
-  .toast {
-    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-    background: #3a3226; color: #fff; padding: 10px 24px;
-    border-radius: 24px; font-size: 14px; z-index: 100;
-    opacity: 0; transition: opacity 0.3s; pointer-events: none;
-  }
-  .toast.show { opacity: 1; }
-
-  /* ===== 响应式 ===== */
-  @media (min-width: 420px) {
-    .full-poem { font-size: 20px; }
-    .fill-sentence { font-size: 28px; }
-    .option-btn { width: 56px; height: 56px; font-size: 24px; }
-  }
+  @keyframes bgshift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+  .wrap{width:100%; max-width:760px; padding:14px; flex:1; display:flex; flex-direction:column;}
+  header{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px;}
+  .title{font-size:1.4em; font-weight:800; color:#d24b6a; text-shadow:1px 1px 0 #fff;}
+  .topbtn{background:#fff; border:none; border-radius:14px; padding:8px 12px; font-size:.8em; box-shadow:0 3px 0 #e7c9a0; cursor:pointer;}
+  .topbtn:active{transform:translateY(2px); box-shadow:0 1px 0 #e7c9a0;}
+  .screen{display:none; flex:1; flex-direction:column;}
+  .screen.active{display:flex;}
+  .card{background:var(--card); border-radius:22px; padding:18px; box-shadow:0 8px 22px rgba(0,0,0,.12); margin-bottom:14px;}
+  h2{margin:.2em 0 .4em; color:var(--accent2);}
+  .poem-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px;}
+  .poem-tile{background:var(--soft); border-radius:18px; padding:14px 10px; text-align:center; cursor:pointer; border:3px solid transparent; transition:.15s;}
+  .poem-tile:hover{border-color:#ffd27a; transform:translateY(-3px);}
+  .poem-tile .pt{font-weight:800; font-size:1.05em;}
+  .poem-tile .pa{font-size:.7em; color:#9a7b5b; margin-top:4px;}
+  .mode-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .mode-tile{background:linear-gradient(135deg,#fff,#fff4e0); border-radius:18px; padding:18px 12px; text-align:center; cursor:pointer; box-shadow:0 4px 0 #f0d3a0; border:none; font-size:1em; color:var(--ink);}
+  .mode-tile:active{transform:translateY(3px); box-shadow:0 1px 0 #f0d3a0;}
+  .mode-tile .emo{font-size:1.8em; display:block; margin-bottom:6px;}
+  .btn{background:var(--accent); color:#fff; border:none; border-radius:16px; padding:12px 18px; font-size:1em; font-weight:700; cursor:pointer; box-shadow:0 4px 0 #d6553c;}
+  .btn:active{transform:translateY(3px); box-shadow:0 1px 0 #d6553c;}
+  .btn.blue{background:var(--accent2); box-shadow:0 4px 0 #3a6bc4;}
+  .btn.ghost{background:#fff; color:var(--ink); box-shadow:0 4px 0 #e3d4bd;}
+  .btn:disabled{opacity:.5; cursor:not-allowed;}
+  .row{display:flex; gap:10px; flex-wrap:wrap;}
+  .row.center{justify-content:center;}
+  .poem-show{font-size:1.4em; line-height:1.9; text-align:center; letter-spacing:2px;}
+  .py{font-size:.6em; color:#7a8aa0; letter-spacing:1px;}
+  .note{background:#f1fbff; border-left:6px solid var(--accent2); border-radius:12px; padding:12px 14px; font-size:.9em; line-height:1.7; margin-top:10px;}
+  .note b{color:var(--accent2);}
+  .blank{display:inline-block; min-width:1.4em; border-bottom:3px dashed var(--accent); color:var(--accent); text-align:center; font-weight:800;}
+  .opts{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:16px;}
+  .opt{background:#fff; border:3px solid #ffd27a; border-radius:16px; padding:12px 18px; font-size:1.3em; cursor:pointer; min-width:54px; text-align:center;}
+  .opt:active{transform:scale(.95);}
+  .opt.ok{background:var(--good); color:#fff; border-color:var(--good);}
+  .opt.no{background:#ff8a8a; color:#fff; border-color:#ff8a8a; animation:shake .4s;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .order-card{background:var(--soft); border-radius:16px; padding:14px; margin:8px 0; font-size:1.2em; text-align:center; cursor:pointer; border:3px solid transparent;}
+  .order-card.picked{border-color:var(--accent); background:#fff0d8;}
+  .order-card.done{background:#d8f5e2; border-color:var(--good);}
+  .stars{font-size:1.8em; text-align:center; letter-spacing:6px; margin:10px 0;}
+  .big-emoji{font-size:3em; text-align:center; margin:8px 0;}
+  .float{position:fixed; font-size:1.6em; animation:rise 1.4s ease-out forwards; pointer-events:none;}
+  @keyframes rise{0%{transform:translateY(0) scale(1); opacity:1}100%{transform:translateY(-160px) scale(1.6); opacity:0}}
+  label{display:block; font-size:.85em; margin:10px 0 4px; color:#7a5b3b; font-weight:700;}
+  input,textarea,select{width:100%; font-size:1em; padding:10px; border-radius:12px; border:2px solid #e6d3b3; font-family:inherit; background:#fffdf8;}
+  textarea{resize:vertical; min-height:70px; line-height:1.6;}
+  .hint{font-size:.72em; color:#9a8; margin-top:2px;}
+  .toast{position:fixed; left:50%; bottom:30px; transform:translateX(-50%); background:#3a2e2e; color:#fff; padding:10px 18px; border-radius:20px; font-size:.85em; opacity:0; transition:.3s; pointer-events:none; z-index:99;}
+  .toast.show{opacity:.95;}
+  .mini{font-size:.7em; color:#9a8; text-align:center; margin-top:6px;}
+  .back{font-size:.8em; background:none; border:none; color:var(--accent2); cursor:pointer; padding:6px 0;}
 </style>
 </head>
 <body>
-
-<!-- 花瓣飘落 -->
-<div class="petals-container" id="petalsContainer"></div>
-
-<!-- Toast -->
-<div class="toast" id="toast"></div>
-
-<!-- 主容器 -->
-<div class="app-container" id="appContainer">
-
-  <!-- 顶部导航栏 -->
-  <div class="top-bar" id="topBar" style="display:none;">
-    <button class="back-btn" id="backBtn" aria-label="返回">←</button>
-    <div class="progress-wrap">
-      <div class="progress-fill" id="progressFill"></div>
+<div class="wrap">
+  <header>
+    <div class="title">🌟 背诗小游戏</div>
+    <div class="row">
+      <button class="topbtn" id="ageBtn">👶 难度：小学低</button>
+      <button class="topbtn" id="musicBtn">🎵 音乐：关</button>
+      <button class="topbtn" id="homeBtn">🏠 回首页</button>
     </div>
-    <span class="progress-label" id="progressLabel">0/8</span>
-    <span class="score-badge">⭐ <span id="scoreDisplay">0</span></span>
-  </div>
+  </header>
 
-  <!-- ========= 首页 ========= -->
-  <div class="page active home-page" id="homePage">
-    <div class="seal-badge">词</div>
-    <h1>一剪梅</h1>
-    <p class="subtitle">红藕香残玉簟秋</p>
-    <p class="author">【宋】李清照</p>
-    <div class="home-divider"></div>
-    <div class="home-btns">
-      <button class="btn btn-primary" id="btnLearn">
-        📖 朗读学习
-      </button>
-      <button class="btn btn-outline" id="btnStart">
-        🎯 开始闯关
-      </button>
-      <button class="btn btn-resume" id="btnResume" style="display:none;">
-        🔄 继续闯关
-      </button>
+  <!-- 主菜单 -->
+  <section class="screen active" id="menu">
+    <div class="card">
+      <h2>第一步：选一首诗 📖</h2>
+      <div class="poem-grid" id="poemGrid"></div>
     </div>
-  </div>
+  </section>
 
-  <!-- ========= 学习页面 ========= -->
-  <div class="page learn-page" id="learnPage">
-    <div class="learn-header">
-      <h2>一剪梅 · 红藕香残玉簟秋</h2>
-      <p style="color:var(--text-light);font-size:13px;margin-top:4px;">【宋】李清照  ·  点击诗句查看释义</p>
-    </div>
-    <div class="full-poem" id="fullPoem"></div>
-    <div class="meaning-card" id="meaningCard"></div>
-    <button class="btn btn-outline" id="btnLearnToChallenge" style="margin-top:16px;width:100%;">
-      🎯 我学会了，去闯关！
-    </button>
-  </div>
-
-  <!-- ========= 闯关页面 ========= -->
-  <div class="page challenge-page" id="challengePage">
-    <div class="challenge-card" id="challengeCard">
-      <!-- 动态渲染 -->
-    </div>
-  </div>
-
-  <!-- ========= 结果页面 ========= -->
-  <div class="page result-page" id="resultPage">
-    <div class="result-icon" id="resultIcon">🎉</div>
-    <div class="result-title" id="resultTitle"></div>
-    <div class="result-score" id="resultScore"></div>
-    <div class="result-stats">
-      <div class="result-stat">
-        <div class="num" id="resultCorrect">0</div>
-        <div class="label">答对</div>
-      </div>
-      <div class="result-stat">
-        <div class="num" id="resultTotal">8</div>
-        <div class="label">总题</div>
-      </div>
-      <div class="result-stat">
-        <div class="num" id="resultCombo">0</div>
-        <div class="label">最大连击</div>
+  <!-- 选玩法 -->
+  <section class="screen" id="modes">
+    <button class="back" id="backToMenu">← 换一首诗</button>
+    <div class="card">
+      <h2 id="modesTitle">第二步：选个玩法 🎮</h2>
+      <div class="mode-grid">
+        <button class="mode-tile" data-mode="study"><span class="emo">📚</span>先学一学</button>
+        <button class="mode-tile" data-mode="blank"><span class="emo">✏️</span>挖空填字</button>
+        <button class="mode-tile" data-mode="match"><span class="emo">🔗</span>对句选择</button>
+        <button class="mode-tile" data-mode="order"><span class="emo">🔀</span>诗句排序</button>
+        <button class="mode-tile" data-mode="read"><span class="emo">🎤</span>听读跟读</button>
       </div>
     </div>
-    <div class="result-poem" id="resultPoem"></div>
-    <div class="home-btns" style="gap:10px;">
-      <button class="btn btn-primary btn-sm" id="btnReplay">🔄 再来一次</button>
-      <button class="btn btn-outline btn-sm" id="btnResultLearn">📖 再看看诗词</button>
-      <button class="btn btn-ghost btn-sm" id="btnBackHome">🏠 回到首页</button>
+  </section>
+
+  <!-- 学习 -->
+  <section class="screen" id="study">
+    <button class="back" id="backToModes1">← 换玩法</button>
+    <div class="card">
+      <h2 id="studyTitle"></h2>
+      <div class="poem-show" id="studyPoem"></div>
+      <div class="row center" style="margin-top:14px;">
+        <button class="btn blue" id="readAllBtn">🔊 朗读全诗</button>
+      </div>
+      <div class="note" id="studyNote"></div>
     </div>
-  </div>
+    <div class="row center">
+      <button class="btn" id="studyPlay">去玩一玩 →</button>
+    </div>
+  </section>
+
+  <!-- 游戏通用容器 -->
+  <section class="screen" id="game">
+    <button class="back" id="backToModes2">← 换玩法</button>
+    <div class="card" id="gameCard"></div>
+    <div class="row center">
+      <button class="btn ghost" id="replayBtn">🔄 再来一次</button>
+    </div>
+  </section>
+
+  <!-- 结果 -->
+  <section class="screen" id="result">
+    <div class="card">
+      <div class="big-emoji" id="resEmoji">🎉</div>
+      <div class="stars" id="resStars"></div>
+      <div id="resText" style="text-align:center; font-size:1em;"></div>
+      <div class="row center" style="margin-top:14px;">
+        <button class="btn" id="resAgain">🔄 再玩一次</button>
+        <button class="btn blue" id="resMenu">🏠 回首页</button>
+      </div>
+    </div>
+  </section>
+
 
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
-// ==================== 诗词数据 ====================
-const VERSES = [
-  {
-    id: 1,
-    text: '红藕香残玉簟秋',
-    pinyin: 'hóng ǒu xiāng cán yù diàn qiū',
-    meaning: '红色的荷花已经凋谢，只留下淡淡的残香；光滑如玉的竹席，已经让人感到秋天的凉意。',
-    keywords: '红藕：红色的荷花。玉簟(diàn)：光滑如玉的竹席。',
-    sortChunks: ['红藕', '香残', '玉簟秋'],
-    blankIndex: 3  // 挖空"残"
-  },
-  {
-    id: 2,
-    text: '轻解罗裳，独上兰舟',
-    pinyin: 'qīng jiě luó cháng，dú shàng lán zhōu',
-    meaning: '我轻轻提起罗裙，独自一人登上了木兰舟。写出了词人独自出行的寂寞。',
-    keywords: '罗裳(cháng)：丝罗做的裙子。兰舟：木兰树做的船，指华美的小船。',
-    sortChunks: ['轻解', '罗裳', '独上', '兰舟'],
-    blankIndex: 5  // 挖空"独"
-  },
-  {
-    id: 3,
-    text: '云中谁寄锦书来',
-    pinyin: 'yún zhōng shuí jì jǐn shū lái',
-    meaning: '仰望天空，谁会从远方给我寄来书信呢？「锦书」指书信，表达了对远方亲人音信的期盼。',
-    keywords: '锦书：书信的美称。传说大雁能传递书信。',
-    sortChunks: ['云中', '谁寄', '锦书来'],
-    blankIndex: 2  // 挖空"谁"
-  },
-  {
-    id: 4,
-    text: '雁字回时，月满西楼',
-    pinyin: 'yàn zì huí shí，yuè mǎn xī lóu',
-    meaning: '当大雁排着「人」字形飞回来的时候，皎洁的月光已经洒满了西边的楼阁。暗示等到深夜也未见来信。',
-    keywords: '雁字：大雁飞行时排成「人」字或「一」字形。',
-    sortChunks: ['雁字', '回时', '月满', '西楼'],
-    blankIndex: 4  // 挖空"月"
-  },
-  {
-    id: 5,
-    text: '花自飘零水自流',
-    pinyin: 'huā zì piāo líng shuǐ zì liú',
-    meaning: '花儿各自飘落凋零，水各自向远方流淌。用自然景物比喻离别和身不由己的无奈。',
-    keywords: '自：各自，各自顾自地。飘零：凋谢飘落。',
-    sortChunks: ['花自', '飘零', '水自流'],
-    blankIndex: 2  // 挖空"飘"
-  },
-  {
-    id: 6,
-    text: '一种相思，两处闲愁',
-    pinyin: 'yī zhǒng xiāng sī，liǎng chù xián chóu',
-    meaning: '虽然是一样的相思之情，却分隔两地，各自在闲适中品味着忧愁。写出了夫妻异地而居的共同愁苦。',
-    keywords: '一种：同一种。两处：两地（指词人和丈夫）。闲愁：闲适中涌起的愁绪。',
-    sortChunks: ['一种', '相思', '两处', '闲愁'],
-    blankIndex: 3  // 挖空"相"
-  },
-  {
-    id: 7,
-    text: '此情无计可消除',
-    pinyin: 'cǐ qíng wú jì kě xiāo chú',
-    meaning: '这种相思之情，没有什么办法可以排遣消除。直接表达了愁绪的浓重和无法排解的无奈。',
-    keywords: '无计：没有办法。消除：排遣、消除。',
-    sortChunks: ['此情', '无计', '可消除'],
-    blankIndex: 4  // 挖空"消"
-  },
-  {
-    id: 8,
-    text: '才下眉头，却上心头',
-    pinyin: 'cái xià méi tóu，què shàng xīn tóu',
-    meaning: '刚刚舒展开了眉头（好像不那么愁了），愁绪却又悄悄地涌上了心头。这句是千古名句，把相思之情的缠绵挥之不去写得极其生动。',
-    keywords: '下眉头：眉头舒展，不皱眉了。上心头：涌上心间。',
-    sortChunks: ['才下', '眉头', '却上', '心头'],
-    blankIndex: 7  // 挖空"心"
-  }
+/* ===================== 诗词数据 ===================== */
+/* 想加诗？在下面 DEFAULT_POEMS 数组里照着格式加一段就行（每首含 week 字段，用于按周归档分组）。 */
+const DEFAULT_POEMS = [
+  { id:"zichao", title:"自嘲", author:"鲁迅", dynasty:"民国", week:"第六周",
+    lines:["运交华盖欲何求","未敢翻身已碰头","破帽遮颜过闹市","漏船载酒泛中流","横眉冷对千夫指","俯首甘为孺子牛","躲进小楼成一统","管他冬夏与春秋"],
+    pinyin:["yùn jiāo huá gài yù hé qiú","wèi gǎn fān shēn yǐ pèng tóu","pò mào zhē yán guò nào shì","lòu chuán zài jiǔ fàn zhōng liú","héng méi lěng duì qiān fū zhǐ","fǔ shǒu gān wèi rú zǐ niú","duǒ jìn xiǎo lóu chéng yī tǒng","guǎn tā dōng xià yǔ chūn qiū"],
+    note:"这是鲁迅爷爷在1932年写的一首很有名的诗。那时候他处境很危险，常常碰壁，出门都要用破帽子遮住脸，坐的船都漏了水。但他一点都不害怕：别人指责他，他就横起眉毛冷冷地面对；他心甘情愿像老黄牛一样为老百姓做事。最后他说：躲进自己的小楼里，安安静静写自己的文章，不管外面冬天夏天、季节怎么变化。这首诗最出名的两句是“横眉冷对千夫指，俯首甘为孺子牛”——对坏人和指责绝不低头，对人民心甘情愿奉献。",
+    words:{ "华盖":"这里指运气不好、处处碰壁", "闹市":"热闹的街市", "中流":"河的中间", "横眉":"竖着眉毛，表示不屈服", "千夫指":"千夫所指，指许多人的指责", "俯首":"低下头", "孺子牛":"为老百姓服务的老黄牛", "一统":"自成一个小天地" } },
+
+  { id:"wenqinhua", title:"折桂令·问秦淮", author:"孔尚任", dynasty:"清", week:"第六周",
+    lines:["问秦淮旧日窗寮","破纸迎风，坏槛当潮","目断魂消","当年粉黛，何处笙箫","罢灯船端阳不闹","收酒旗重九无聊","白鸟飘飘，绿水滔滔","嫩黄花有些蝶飞，新红叶无个人瞧"],
+    pinyin:["wèn qín huái jiù rì chuāng liáo","pò zhǐ yíng fēng，huài kǎn dāng cháo","mù duàn hún xiāo","dāng nián fěn dài，hé chù shēng xiāo","bà dēng chuán duān yáng bù nào","shōu jiǔ qí chóng jiǔ wú liáo","bái niǎo piāo piāo，lǜ shuǐ tāo tāo","nèn huáng huā yǒu xiē dié fēi，xīn hóng yè wú gè rén qiáo"],
+    note:"这支曲子选自孔尚任爷爷写的戏曲《桃花扇》。它讲的是：明朝灭亡之后，南京秦淮河一带以前特别热闹的地方，全都冷清了下来。以前秦淮河两岸是热闹的歌楼，如今窗户纸破了，被风吹得哗哗响，栏杆也坏了，潮水拍打着岸边，看得人心里非常难过。当年那些漂亮的歌女、好听的音乐都去哪儿了？端午节不再有挂满灯彩的游船，重阳节也没人挂酒旗喝酒了。只剩白鸟在天上飞，绿水哗哗地流，嫩黄的花儿还有几只蝴蝶来采，可是新红的枫叶却没有人来看了——从前有多热闹，现在就有多冷清。",
+    words:{ "秦淮":"南京的秦淮河，古代最热闹繁华的地方", "窗寮":"窗户", "槛":"栏杆", "目断魂消":"看得伤心，非常难过", "粉黛":"化妆品，这里指歌女、美人", "笙箫":"乐器，这里指音乐", "灯船":"挂满灯彩的游船", "端阳":"端午节", "酒旗":"酒馆门口挂的布旗", "重九":"重阳节", "滔滔":"水很大的样子" } },
+
+  { id:"huanghelou", title:"黄鹤楼", author:"崔颢", dynasty:"唐", week:"第七周",
+    lines:["昔人已乘黄鹤去","此地空余黄鹤楼","黄鹤一去不复返","白云千载空悠悠","晴川历历汉阳树","芳草萋萋鹦鹉洲","日暮乡关何处是","烟波江上使人愁"],
+    pinyin:["xī rén yǐ chéng huáng hè qù","cǐ dì kōng yú huáng hè lóu","huáng hè yī qù bù fù fǎn","bái yún qiān zǎi kōng yōu yōu","qíng chuān lì lì hàn yáng shù","fāng cǎo qī qī yīng wǔ zhōu","rì mù xiāng guān hé chù shì","yān bō jiāng shàng shǐ rén chóu"],
+    note:"诗人崔颢登上武昌的黄鹤楼。传说有仙人骑着黄鹤从这里飞走，诗人想象：仙人已经乘着黄鹤飞走了，这里只留下一座空空的黄鹤楼。黄鹤一去就再也没有回来，只有白云千年来一直在天上飘。晴天的时候，可以清清楚楚看见汉阳的树，鹦鹉洲上长满茂盛的青草。到了傍晚，望着茫茫的江面，诗人想：我的家乡在哪里呢？眼前烟雾笼罩的江水，让人心中涌起深深的乡愁。这首诗太有名了，传说后来李白来此想题诗，看到崔颢这首诗都自叹不如。",
+    words:{ "昔人":"从前的人（指传说中乘鹤飞走的仙人）", "空余":"只剩下", "千载":"一千年，形容很久", "悠悠":"飘荡不停的样子", "晴川":"晴天阳光下的江面", "历历":"清清楚楚", "萋萋":"草木茂盛的样子", "鹦鹉洲":"长江中的一个小洲，在武昌附近", "乡关":"家乡", "烟波":"烟雾笼罩的水面" } },
+
+  { id:"zibaozhe", title:"自暴者", author:"孟子", dynasty:"战国", week:"第七周",
+    lines:["自暴者，不可与有言也；","自弃者，不可与有为也。","言非礼义，谓之自暴也；","吾身不能居仁由义，谓之自弃也。","仁，人之安宅也；","义，人之正路也。","旷安宅而弗居，舍正路而不由，哀哉！"],
+    pinyin:["zì bào zhě，bù kě yǔ yǒu yán yě；","zì qì zhě，bù kě yǔ yǒu wéi yě。","yán fēi lǐ yì，wèi zhī zì bào yě；","wú shēn bù néng jū rén yóu yì，wèi zhī zì qì yě。","rén，rén zhī ān zhái yě；","yì，rén zhī zhèng lù yě。","kuàng ān zhái ér fú jū，shě zhèng lù ér bù yóu，āi zāi！"],
+    note:"这段话选自《孟子·离娄上》。孟子说：自己糟蹋自己的人，没办法和他谈论有价值的话；自己放弃自己的人，没办法和他一起做有价值的事。说话诋毁礼义，这就是“自暴”；认为自己不能心存仁爱、走正道，这就是“自弃”。仁，是人最安稳的家；义，是人最正确的路。空着安稳的家不住，放着正确的路不走，真是太可悲了。这段话告诉我们要珍惜自己、努力向上，不要自暴自弃。",
+    words:{ "自暴":"自己糟蹋、损害自己", "自弃":"自己放弃自己，不求上进", "有言":"有价值的言论", "有为":"做有价值的事", "礼义":"礼仪和道义", "居仁由义":"心里存着仁爱，做事遵循道义", "安宅":"安稳的家（比喻仁）", "正路":"正确的道路（比喻义）", "旷":"空着、荒废", "弗":"不", "舍":"放弃", "哀":"可悲" } },
+
+  { id:"shitoucheng", title:"金陵五题·石头城", author:"刘禹锡", dynasty:"唐", week:"第八周",
+    lines:["山围故国周遭在","潮打空城寂寞回","淮水东边旧时月","夜深还过女墙来"],
+    pinyin:["shān wéi gù guó zhōu zāo zài","cháo dǎ kōng chéng jì mò huí","huái shuǐ dōng biān jiù shí yuè","yè shēn hái guò nǚ qiáng lái"],
+    note:"选自刘禹锡的组诗《金陵五题》。金陵就是现在的南京，曾经是六朝的古都，特别繁华。诗人来到这里，看见石头城周围的山还在，可城已经空了：江水拍打着空空的城墙，又寂寞地退回去。只有秦淮河东边那轮照着古城的月亮，夜深的时候还像从前一样，照过城墙上的女墙。诗人借“城空、月依旧”的景色，感叹当年的繁华早就烟消云散了。",
+    words:{ "故国":"从前的都城（这里指六朝古都金陵）", "周遭":"周围", "空城":"空荡荡的城池", "寂寞回":"潮水拍打空城后寂寞地退回去", "淮水":"秦淮河", "旧时月":"从前照过古城的月亮", "女墙":"城墙上凹凸的小墙，也叫垛墙" } },
+
+  { id:"loushiming", title:"陋室铭", author:"刘禹锡", dynasty:"唐", week:"第八周",
+    lines:["山不在高，有仙则名","水不在深，有龙则灵","斯是陋室，惟吾德馨","苔痕上阶绿，草色入帘青","谈笑有鸿儒，往来无白丁","可以调素琴，阅金经","无丝竹之乱耳，无案牍之劳形","南阳诸葛庐，西蜀子云亭","孔子云：何陋之有"],
+    pinyin:["shān bù zài gāo，yǒu xiān zé míng","shuǐ bù zài shēn，yǒu lóng zé líng","sī shì lòu shì，wéi wú dé xīn","tái hén shàng jiē lǜ，cǎo sè rù lián qīng","tán xiào yǒu hóng rú，wǎng lái wú bái dīng","kě yǐ tiáo sù qín，yuè jīn jīng","wú sī zhú zhī luàn ěr，wú àn dú zhī láo xíng","nán yáng zhū gě lú，xī shǔ zǐ yún tíng","kǒng zǐ yún：hé lòu zhī yǒu"],
+    note:"《陋室铭》是刘禹锡写的一篇很有名的短文。“铭”就是刻在器物上用来警醒自己的文字。刘禹锡住的房子虽然简陋，但他认为：山不在乎高，有仙人居住就出名；水不在乎深，有蛟龙就显得灵验；我这简陋的屋子，因为主人品德高尚而充满芬芳。台阶上长满青苔，帘外草色青青；来谈笑的都是有学问的读书人，往来的没有平民百姓；可以弹弹素琴、读读佛经；没有嘈杂的音乐扰乱耳朵，没有官府的公文劳累身体。南阳有诸葛亮的草庐，西蜀有扬子云的亭子。孔子说：有什么简陋的呢？这篇文章告诉我们：屋子简陋不可怕，只要主人品德高尚、志趣高雅，简陋的屋子也会光彩照人。",
+    words:{ "铭":"刻在器物上用来警醒自己的文字", "陋室":"简陋的屋子", "德馨":"品德高尚（馨：香气，比喻美好的品德）", "鸿儒":"有大学问的人", "白丁":"没有学问的平民", "素琴":"没有装饰的琴", "金经":"佛经", "丝竹":"乐器（丝：弦乐器，竹：管乐器），指音乐", "案牍":"官府的公文", "劳形":"使身体劳累", "诸葛庐":"诸葛亮隐居南阳时的草庐", "子云亭":"汉代扬雄（字子云）在成都的亭子" } }
 ];
 
-// 所有出现的字（用于生成干扰项）
-const ALL_CHARS = [...new Set(VERSES.map(v => [...v.text.replace(/[，。？！、]/g, '')]).flat())];
-function getRandomDistractors(correct, count = 3) {
-  const pool = ALL_CHARS.filter(c => c !== correct);
-  const shuffled = pool.sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+const AGE_KEY = "poetry_game_age_v1";
+// 清理早期「家长添加」功能留下的本地诗词数据（一次性，页面每次加载都会执行，防止旧数据残留）
+try{ localStorage.removeItem("poetry_game_user_poems_v1"); }catch(e){}
+
+function allPoems(){ return DEFAULT_POEMS; }
+
+const AGE_LEVELS = [
+  {key:"toddler", label:"幼儿(3-5)", fs:"30px", blanks:1, opts:3},
+  {key:"low",     label:"小学低(6-8)", fs:"24px", blanks:1, opts:3},
+  {key:"high",    label:"小学高(9-12)", fs:"20px", blanks:2, opts:4}
+];
+let ageIdx = parseInt(localStorage.getItem(AGE_KEY) || "1", 10);
+if(ageIdx<0||ageIdx>2) ageIdx=1;
+function applyAge(){ document.documentElement.style.setProperty('--fs', AGE_LEVELS[ageIdx].fs); document.getElementById('ageBtn').textContent = "👶 难度：" + AGE_LEVELS[ageIdx].label; }
+
+/* ===================== 通用工具 ===================== */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+function show(id){ $$('.screen').forEach(s=>s.classList.remove('active')); $('#'+id).classList.add('active'); window.scrollTo(0,0); }
+let toastTimer;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),1800); }
+
+// 简单的成功/失败音效（用网页自带声音，无需文件）
+let audioCtx;
+function beep(freq, dur, type){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type=type||'sine'; o.frequency.value=freq; o.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(.15, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime+dur);
+    o.start(); o.stop(audioCtx.currentTime+dur);
+  }catch(e){}
+}
+function goodSound(){ beep(660,.12); setTimeout(()=>beep(880,.18),110); }
+function badSound(){ beep(220,.25,'triangle'); }
+
+/* ---- 背景音乐（用网页合成，无需音乐文件，离线可用）---- */
+const MUSIC_KEY='poetry_game_music_v1';
+let musicTimer=null, musicOn=false, musicOscs=[], musicGain=null;
+// C宫五声音阶：do re mi sol la（柔和的中式小调）
+const SCALE=[523.25,587.33,659.25,783.99,880.00];
+const MELODY=[0,2,4,3,4, 2,1,0,-1, 0,1,2,4, 2,1,0,-1, 0,2,4,3, 4,2,1,0, 2,4,3,4, 2,0,-1,-1];
+const NOTE_LEN=0.8;
+function musicNote(freq,t,dur){
+  try{
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    const f=audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=1100;
+    o.type='triangle'; o.frequency.value=freq;
+    o.connect(f); f.connect(g); g.connect(musicGain);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.linearRampToValueAtTime(0.5,t+0.06);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.start(t); o.stop(t+dur+0.1);
+    musicOscs.push(o);
+  }catch(e){}
+}
+function scheduleMusicLoop(){
+  if(!musicOn||!audioCtx) return;
+  const base=audioCtx.currentTime+0.2;
+  MELODY.forEach((step,i)=>{ if(step<0) return; musicNote(SCALE[step], base+i*NOTE_LEN, NOTE_LEN*0.92); });
+  musicTimer=setTimeout(scheduleMusicLoop, MELODY.length*NOTE_LEN*1000-150);
+}
+function startMusic(){
+  try{
+    if(!('AudioContext' in window||'webkitAudioContext' in window)){ toast('当前浏览器不支持音频'); return; }
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    if(!musicGain){ musicGain=audioCtx.createGain(); musicGain.gain.value=0.12; musicGain.connect(audioCtx.destination); }
+    audioCtx.resume && audioCtx.resume();
+    musicOn=true;
+    scheduleMusicLoop();
+    updateMusicBtn();
+  }catch(e){}
+}
+function stopMusic(){
+  musicOn=false;
+  if(musicTimer){ clearTimeout(musicTimer); musicTimer=null; }
+  musicOscs.forEach(o=>{ try{o.stop();}catch(e){} });
+  musicOscs=[];
+  updateMusicBtn();
+}
+function updateMusicBtn(){ $('#musicBtn').textContent = musicOn ? '🎵 音乐：开' : '🎵 音乐：关'; }
+
+// 中文朗读
+function speak(text, rate){
+  try{
+    if(!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='zh-CN'; u.rate=rate||0.8; u.pitch=1.05;
+    speechSynthesis.speak(u);
+  }catch(e){}
 }
 
-// ==================== 游戏状态 ====================
-const state = {
-  currentPage: 'home',
-  challengeIndex: 0,
-  score: 0,
-  correctCount: 0,
-  combo: 0,
-  maxCombo: 0,
-  fillAnswer: null,
-  sortAnswer: [],
-  completed: false,
-  wrongAttempts: 0  // 当前题错误次数
+// 飘字庆祝
+function celebrate(){
+  const emojis=['⭐','🌟','🎉','💖','✨','🌈'];
+  for(let i=0;i<14;i++){
+    const s=document.createElement('div'); s.className='float';
+    s.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    s.style.left=(10+Math.random()*80)+'%'; s.style.top=(60+Math.random()*20)+'%';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),1500);
+  }
+}
+
+/* ===================== 菜单渲染 ===================== */
+let currentPoem = null;
+function renderPoemGrid(){
+  const grid=$('#poemGrid'); grid.innerHTML='';
+  const poems=allPoems();
+  // 按周次分组：第六周、第七周……没填周次的归入「未分组」
+  const groups={};
+  poems.forEach(p=>{ const w=p.week||'未分组'; (groups[w]=groups[w]||[]).push(p); });
+  const weekOrder=Object.keys(groups).sort((a,b)=>{
+    const na=parseInt(a,10), nb=parseInt(b,10);
+    if(!isNaN(na)&&!isNaN(nb)) return na-nb;
+    if(a==='未分组') return 1; if(b==='未分组') return -1;
+    return 0;
+  });
+  weekOrder.forEach(w=>{
+    const h=document.createElement('div');
+    h.style.cssText='grid-column:1/-1; font-weight:800; color:#d24b6a; margin:8px 0 2px; font-size:1.05em;';
+    h.textContent=w==='未分组'?'📖 未分组':'📅 '+w;
+    grid.appendChild(h);
+    groups[w].forEach(p=>{
+      const d=document.createElement('div'); d.className='poem-tile';
+      d.innerHTML=`<div class="pt">${p.title}</div><div class="pa">${p.author||''} ${p.dynasty?('·'+p.dynasty):''}</div>`;
+      d.onclick=()=>{ currentPoem=p; openModes(p); };
+      grid.appendChild(d);
+    });
+  });
+}
+function openModes(p){
+  $('#modesTitle').textContent = `第二步：选个玩法 🎮　《${p.title}》`;
+  show('modes');
+}
+
+/* ===================== 学习模式 ===================== */
+function openStudy(p){
+  $('#studyTitle').textContent = `《${p.title}》　${p.author||''}${p.dynasty?(' · '+p.dynasty):''}`;
+  let html='';
+  p.lines.forEach((ln,i)=>{
+    const py = p.pinyin && p.pinyin[i] ? `<div class="py">${p.pinyin[i]}</div>` : '';
+    html += `<div>${ln}${py}</div>`;
+  });
+  $('#studyPoem').innerHTML=html;
+  let note=`<b>🌟 意思：</b>${p.note||'（这首暂时没有写释义。）'}`;
+  if(p.words && Object.keys(p.words).length){
+    note += `<br><br><b>🔑 重点词：</b>`;
+    note += Object.entries(p.words).map(([k,v])=>`${k}＝${v}`).join('；')+'。';
+  }
+  $('#studyNote').innerHTML=note;
+  $('#studyPlay').onclick=()=>openGame('blank');
+  show('study');
+}
+
+/* ===================== 游戏模式入口 ===================== */
+function openGame(mode){
+  if(mode==='study'){ openStudy(currentPoem); return; }
+  $('#gameCard').innerHTML='';
+  if(mode==='blank') startBlank();
+  if(mode==='match') startMatch();
+  if(mode==='order') startOrder();
+  if(mode==='read')  startRead();
+  show('game');
+}
+
+/* ---- 挖空填字 ---- */
+function startBlank(){
+  const p=currentPoem;
+  const level=AGE_LEVELS[ageIdx];
+  // 把每句拆成字，逐句挖空
+  let queue=[];
+  const punct=/[\s，。、；：？！,.!?;:·“”‘’]/;
+  p.lines.forEach((ln,li)=>{
+    const chars=[...ln];
+    const cands=[];
+    chars.forEach((c,i)=>{ if(!punct.test(c)) cands.push(i); });
+    if(cands.length>0){
+      const idx=cands[Math.floor(Math.random()*cands.length)];
+      queue.push({li, idx, char:chars[idx], line:ln, chars});
+    }
+  });
+  if(queue.length===0) queue.push({li:0,idx:0,char:[...p.lines[0]][0],line:p.lines[0],chars:[...p.lines[0]]});
+  let q=0, stars=0;
+  function render(){
+    const item=queue[q];
+    const chars=item.chars;
+    let lineHtml='';
+    chars.forEach((c,i)=>{
+      if(i===item.idx){ lineHtml += `<span class="blank" id="bk">?</span>`; }
+      else lineHtml += c;
+    });
+    // 选项：正确答案 + 干扰字（从全诗随机取）
+    const pool=[];
+    p.lines.forEach(l=>[...l].forEach(c=>{ if(c!==item.char && !/[\s，。、]/.test(c)) pool.push(c); }));
+    const distract=new Set();
+    while(distract.size<level.opts-1 && pool.length){ distract.add(pool[Math.floor(Math.random()*pool.length)]); }
+    const opts=shuffle([item.char, ...distract]);
+    $('#gameCard').innerHTML = `
+      <h2>✏️ 挖空填字　第 ${q+1}/${queue.length} 句</h2>
+      <div class="poem-show" style="font-size:1.3em; margin:18px 0;">${lineHtml}</div>
+      <div class="opts" id="optBox"></div>`;
+    const box=$('#optBox');
+    opts.forEach(o=>{
+      const b=document.createElement('div'); b.className='opt'; b.textContent=o;
+      b.onclick=()=>{
+        if(o===item.char){
+          b.classList.add('ok'); goodSound(); stars++;
+          setTimeout(()=>{ q++; if(q<queue.length) render(); else finish(stars,queue.length); },550);
+        }else{
+          b.classList.add('no'); badSound();
+          setTimeout(()=>b.classList.remove('no'),450);
+        }
+      };
+      box.appendChild(b);
+    });
+  }
+  render();
+}
+
+/* ---- 对句选择 ---- */
+function startMatch(){
+  const p=currentPoem;
+  // 构造问题：上一句 -> 下一句
+  let qs=[];
+  for(let i=0;i<p.lines.length-1;i++){
+    qs.push({q:p.lines[i], a:p.lines[i+1]});
+  }
+  if(qs.length===0) qs.push({q:p.lines[0], a:p.lines[0]});
+  qs=shuffle(qs);
+  let qi=0, stars=0; const level=AGE_LEVELS[ageIdx];
+  function render(){
+    const item=qs[qi];
+    // 干扰项：从全诗其它句子取
+    const others=p.lines.filter(l=>l!==item.a);
+    const distract=shuffle(others).slice(0, Math.min(level.opts-1, others.length));
+    const opts=shuffle([item.a, ...distract]);
+    $('#gameCard').innerHTML=`
+      <h2>🔗 对句选择　第 ${qi+1}/${qs.length} 题</h2>
+      <div class="poem-show" style="font-size:1.4em; margin:18px 0;">${item.q}</div>
+      <div class="mini">猜一猜，下一句是什么？</div>
+      <div class="opts" id="optBox"></div>`;
+    const box=$('#optBox');
+    opts.forEach(o=>{
+      const b=document.createElement('div'); b.className='opt'; b.textContent=o; b.style.fontSize='1.1em';
+      b.onclick=()=>{
+        if(o===item.a){ b.classList.add('ok'); goodSound(); stars++;
+          setTimeout(()=>{ qi++; if(qi<qs.length) render(); else finish(stars,qs.length); },550);
+        }else{ b.classList.add('no'); badSound(); setTimeout(()=>b.classList.remove('no'),450); }
+      };
+      box.appendChild(b);
+    });
+  }
+  render();
+}
+
+/* ---- 诗句排序 ---- */
+function startOrder(){
+  const p=currentPoem;
+  const correct=p.lines;
+  let shuffled=shuffle([...correct]);
+  // 保证不是已经正确的顺序
+  if(shuffled.join('|')===correct.join('|')) shuffled=shuffle(shuffled);
+  let picked=null;
+  $('#gameCard').innerHTML=`
+    <h2>🔀 诗句排序</h2>
+    <div class="mini">按正确的顺序，一句一句点出来 👇</div>
+    <div id="orderBox" style="margin-top:10px;"></div>
+    <div class="row center" style="margin-top:14px;">
+      <button class="btn ghost" id="orderReset">↩️ 重排</button>
+      <button class="btn" id="orderCheck">✅ 检查</button>
+    </div>`;
+  const box=$('#orderBox');
+  function draw(){
+    box.innerHTML='';
+    shuffled.forEach((ln,i)=>{
+      const c=document.createElement('div');
+      c.className='order-card'+(picked===i?' picked':'');
+      c.textContent=(i+1)+'. '+ln;
+      c.onclick=()=>{
+        if(picked===null){ picked=i; draw(); return; }
+        if(picked===i){ picked=null; draw(); return; }
+        // 交换
+        [shuffled[picked],shuffled[i]]=[shuffled[i],shuffled[picked]];
+        picked=null; draw();
+      };
+      box.appendChild(c);
+    });
+  }
+  draw();
+  $('#orderReset').onclick=()=>{ shuffled=shuffle([...correct]); if(shuffled.join('|')===correct.join('|')) shuffled=shuffle(shuffled); picked=null; draw(); };
+  $('#orderCheck').onclick=()=>{
+    if(shuffled.join('|')===correct.join('|')){
+      celebrate(); goodSound();
+      setTimeout(()=>finish(3,3),300);
+    }else{
+      badSound(); toast('再看看，顺序还不对哦~');
+    }
+  };
+}
+
+/* ---- 听读跟读 ---- */
+function startRead(){
+  const p=currentPoem;
+  $('#gameCard').innerHTML=`
+    <h2>🎤 听读跟读</h2>
+    <div class="poem-show" style="font-size:1.2em; margin:12px 0;" id="readLines"></div>
+    <div class="row center" style="margin:12px 0;">
+      <button class="btn blue" id="readSlow">🔊 慢速朗读</button>
+    </div>
+    <div class="note">${p.note||''}</div>`;
+  $('#readLines').innerHTML = p.lines.map((l,i)=>`<div data-i="${i}">${l}</div>`).join('');
+  $('#readSlow').onclick=()=>{
+    speak(p.lines.join('。'), 0.6);
+    // 逐句高亮
+    p.lines.forEach((l,i)=> setTimeout(()=>{
+      $$('#readLines div').forEach(d=>d.style.background='');
+      const d=document.querySelector(`#readLines div[data-i="${i}"]`); if(d) d.style.background='#fff0c8';
+    }, i*2200));
+  };
+  // 完成后给奖励
+  setTimeout(()=>{
+    const done=document.createElement('button');
+    done.className='btn'; done.textContent='🌟 我背完啦！';
+    done.style.marginTop='14px';
+    done.onclick=()=>{ celebrate(); goodSound(); finish(3,3); };
+    $('#gameCard').appendChild(done);
+  }, 600);
+}
+
+/* ===================== 结束 ===================== */
+function finish(stars, total){
+  const rate = total? stars/total : 1;
+  let emoji='🎉', text='太棒啦！';
+  if(rate>=1){ emoji='🏆'; text='全对！你真是背诗小能手！'; }
+  else if(rate>=0.6){ emoji='🌟'; text='很不错，再多练几次就熟啦！'; }
+  else { emoji='💪'; text='没关系，多读几遍就记住了，加油！'; }
+  $('#resEmoji').textContent=emoji;
+  $('#resStars').textContent='⭐'.repeat(stars)+'☆'.repeat(Math.max(0,total-stars));
+  $('#resText').textContent=text;
+  celebrate(); goodSound();
+  show('result');
+}
+
+/* ===================== 事件绑定 ===================== */
+$('#backToMenu').onclick=()=>show('menu');
+$('#homeBtn').onclick=()=>{ renderPoemGrid(); show('menu'); };
+$('#backToModes1').onclick=()=>show('modes');
+$('#backToModes2').onclick=()=>show('modes');
+$$('.mode-tile').forEach(b=> b.onclick=()=>openGame(b.dataset.mode));
+$('#replayBtn').onclick=()=>{ const m=lastMode; openGame(m); };
+$('#resAgain').onclick=()=>openGame(lastMode);
+$('#resMenu').onclick=()=>{ renderPoemGrid(); show('menu'); };
+$('#readAllBtn').onclick=()=>speak(currentPoem.lines.join('。'),0.8);
+
+let lastMode='blank';
+const _openGame=openGame;
+openGame=function(m){ lastMode=m; _openGame(m); };
+
+// 难度切换
+$('#ageBtn').onclick=()=>{
+  ageIdx=(ageIdx+1)%AGE_LEVELS.length;
+  localStorage.setItem(AGE_KEY, ageIdx);
+  applyAge(); toast('难度：'+AGE_LEVELS[ageIdx].label);
 };
 
-// ==================== DOM 引用 ====================
-const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => document.querySelectorAll(sel);
-
-const homePage = $('#homePage');
-const learnPage = $('#learnPage');
-const challengePage = $('#challengePage');
-const resultPage = $('#resultPage');
-const topBar = $('#topBar');
-const progressFill = $('#progressFill');
-const progressLabel = $('#progressLabel');
-const scoreDisplay = $('#scoreDisplay');
-const challengeCard = $('#challengeCard');
-const meaningCard = $('#meaningCard');
-const fullPoem = $('#fullPoem');
-const toast = $('#toast');
-
-// ==================== 页面切换 ====================
-function showPage(name) {
-  [homePage, learnPage, challengePage, resultPage].forEach(p => p.classList.remove('active'));
-  state.currentPage = name;
-  if (name === 'home') {
-    homePage.classList.add('active');
-    topBar.style.display = 'none';
-    updateHomeButtons();
-  } else if (name === 'learn') {
-    learnPage.classList.add('active');
-    topBar.style.display = 'flex';
-    updateProgress();
-  } else if (name === 'challenge') {
-    challengePage.classList.add('active');
-    topBar.style.display = 'flex';
-    updateProgress();
-  } else if (name === 'result') {
-    resultPage.classList.add('active');
-    topBar.style.display = 'none';
-  }
+// 背景音乐开关
+$('#musicBtn').onclick=()=>{
+  if(musicOn){ stopMusic(); localStorage.setItem(MUSIC_KEY,'0'); }
+  else{ startMusic(); localStorage.setItem(MUSIC_KEY,'1'); }
+};
+updateMusicBtn();
+// 如果上次开着音乐，等孩子第一次点击页面时自动开始（浏览器要求先有操作才能出声）
+if(localStorage.getItem(MUSIC_KEY)==='1'){
+  const once=function(){ startMusic(); document.removeEventListener('pointerdown', once); };
+  document.addEventListener('pointerdown', once);
 }
 
-function updateProgress() {
-  const total = VERSES.length;
-  const done = state.challengeIndex;
-  const pct = total > 0 ? (done / total * 100) : 0;
-  progressFill.style.width = pct + '%';
-  progressLabel.textContent = done + '/' + total;
-  scoreDisplay.textContent = state.score;
-}
-
-// ==================== Toast ====================
-let toastTimer;
-function showToast(msg, duration = 1800) {
-  clearTimeout(toastTimer);
-  toast.textContent = msg;
-  toast.classList.add('show');
-  toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
-}
-
-// ==================== 保存/恢复进度 ====================
-function saveProgress() {
-  const data = {
-    challengeIndex: state.challengeIndex,
-    score: state.score,
-    correctCount: state.correctCount,
-    combo: state.combo,
-    maxCombo: state.maxCombo,
-    completed: state.completed
-  };
-  try { localStorage.setItem('yijianmei_progress', JSON.stringify(data)); } catch(e) {}
-}
-
-function loadProgress() {
-  try {
-    const raw = localStorage.getItem('yijianmei_progress');
-    if (raw) {
-      const data = JSON.parse(raw);
-      state.challengeIndex = data.challengeIndex || 0;
-      state.score = data.score || 0;
-      state.correctCount = data.correctCount || 0;
-      state.combo = data.combo || 0;
-      state.maxCombo = data.maxCombo || 0;
-      state.completed = data.completed || false;
-      return true;
-    }
-  } catch(e) {}
-  return false;
-}
-
-function clearProgress() {
-  state.challengeIndex = 0;
-  state.score = 0;
-  state.correctCount = 0;
-  state.combo = 0;
-  state.maxCombo = 0;
-  state.completed = false;
-  try { localStorage.removeItem('yijianmei_progress'); } catch(e) {}
-}
-
-function updateHomeButtons() {
-  const hasProgress = loadProgress() && (state.challengeIndex > 0) && !state.completed;
-  $('#btnResume').style.display = hasProgress ? 'flex' : 'none';
-}
-
-// ==================== 花瓣动画 ====================
-function createPetals() {
-  const container = $('#petalsContainer');
-  const petals = ['🌸', '🍂', '🌺', '🏵️', '💮'];
-  for (let i = 0; i < 15; i++) {
-    const petal = document.createElement('span');
-    petal.className = 'petal';
-    petal.textContent = petals[Math.floor(Math.random() * petals.length)];
-    petal.style.left = Math.random() * 100 + '%';
-    petal.style.fontSize = (16 + Math.random() * 20) + 'px';
-    petal.style.animationDuration = (8 + Math.random() * 14) + 's';
-    petal.style.animationDelay = Math.random() * 12 + 's';
-    container.appendChild(petal);
-  }
-}
-
-// ==================== 学习页面 ====================
-function buildLearnPage() {
-  let html = '';
-  VERSES.forEach((v, i) => {
-    html += `<span class="highlight-line" data-index="${i}">${v.text}</span>`;
-    if (i === 0 || i === 3 || i === 5 || i === 6) {
-      html += '<br>';
-    } else if (i < VERSES.length - 1) {
-      // 连接词
-    }
-  });
-  html += '<br><span style="font-size:13px;color:var(--text-light);display:block;margin-top:8px;">—— 点击每一句查看释义和拼音</span>';
-  fullPoem.innerHTML = html;
-
-  // 点击事件
-  fullPoem.querySelectorAll('.highlight-line').forEach(el => {
-    el.addEventListener('click', () => {
-      const idx = parseInt(el.dataset.index);
-      const verse = VERSES[idx];
-      // 高亮
-      fullPoem.querySelectorAll('.highlight-line').forEach(e => e.classList.remove('tapped'));
-      el.classList.add('tapped');
-      // 显示释义
-      meaningCard.innerHTML = `
-        <div class="original">「${verse.text}」</div>
-        <div style="font-size:12px;color:var(--gold);margin-bottom:6px;">${verse.pinyin}</div>
-        <div>${verse.meaning}</div>
-        <div style="margin-top:6px;font-size:12px;color:var(--text-light);">${verse.keywords}</div>
-      `;
-      meaningCard.classList.add('show');
-    });
-  });
-}
-
-// ==================== 闯关 - 填空模式 ====================
-function renderFillChallenge(verse) {
-  const chars = [...verse.text];
-  // 随机选择挖空位置，避开标点
-  const validIndices = chars.reduce((arr, ch, i) => {
-    if (!/[，。？！、\s]/.test(ch)) arr.push(i);
-    return arr;
-  }, []);
-  const blankIdx = validIndices[Math.floor(Math.random() * validIndices.length)];
-  const correctChar = chars[blankIdx];
-
-  // 干扰项
-  const distractors = getRandomDistractors(correctChar, 3);
-  const options = [correctChar, ...distractors].sort(() => Math.random() - 0.5);
-
-  state.fillAnswer = null;
-  state.wrongAttempts = 0;
-
-  // 构建句子展示
-  let sentenceHTML = '';
-  chars.forEach((ch, i) => {
-    if (/[，。？！、]/.test(ch)) {
-      sentenceHTML += `<span class="comma">${ch}</span>`;
-    } else if (i === blankIdx) {
-      sentenceHTML += `<span class="blank" id="fillBlank"></span>`;
-    } else {
-      sentenceHTML += `<span style="opacity:0.5;letter-spacing:4px;">${ch}</span>`;
-    }
-  });
-
-  challengeCard.innerHTML = `
-    <div class="challenge-number">第 ${state.challengeIndex + 1} / ${VERSES.length} 关</div>
-    <span class="challenge-type-badge badge-fill">📝 填空默背</span>
-    <div class="fill-sentence">${sentenceHTML}</div>
-    <p style="font-size:13px;color:var(--text-light);margin-bottom:8px;">点击正确的字填入空格</p>
-    <div class="options-grid" id="optionsGrid">
-      ${options.map((opt, i) => `<button class="option-btn" data-char="${opt}" data-idx="${i}">${opt}</button>`).join('')}
-    </div>
-    <div class="feedback" id="feedback"></div>
-    <button class="btn btn-primary btn-sm btn-next" id="btnNext">下一关 →</button>
-  `;
-
-  // 绑定选项点击
-  const blank = $('#fillBlank');
-  const feedback = $('#feedback');
-  const btnNext = $('#btnNext');
-  state.fillAnswer = null;
-
-  $$('#optionsGrid .option-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (state.fillAnswer !== null) return; // 已作答
-      const chosen = btn.dataset.char;
-      state.fillAnswer = chosen;
-
-      // 视觉反馈
-      blank.textContent = chosen;
-      blank.classList.add('filled');
-
-      if (chosen === correctChar) {
-        btn.classList.add('correct');
-        state.score += 10 + state.combo * 2;
-        state.correctCount++;
-        state.combo++;
-        if (state.combo > state.maxCombo) state.maxCombo = state.combo;
-        feedback.className = 'feedback show success';
-        feedback.innerHTML = '✅ 太棒了！<span class="meaning-hint">' + verse.meaning + '</span>';
-        btnNext.classList.add('show');
-        updateProgress();
-        saveProgress();
-      } else {
-        btn.classList.add('wrong');
-        state.wrongAttempts++;
-        state.combo = 0;
-        feedback.className = 'feedback show error';
-        feedback.innerHTML = '❌ 不对哦，再想想！正确答案是「' + correctChar + '」<span class="meaning-hint">' + verse.meaning + '</span>';
-        // 显示正确答案
-        blank.textContent = correctChar;
-        blank.classList.add('filled');
-        blank.style.background = '#ffebee';
-        blank.style.borderColor = 'var(--red)';
-        // 高亮正确选项
-        $$('#optionsGrid .option-btn').forEach(b => {
-          if (b.dataset.char === correctChar) b.classList.add('correct');
-        });
-        btnNext.classList.add('show');
-        updateProgress();
-        saveProgress();
-      }
-    });
-  });
-
-  // 下一关
-  btnNext.addEventListener('click', () => {
-    state.challengeIndex++;
-    if (state.challengeIndex >= VERSES.length) {
-      state.completed = true;
-      saveProgress();
-      showResult();
-    } else {
-      nextChallenge();
-    }
-    updateProgress();
-  });
-}
-
-// ==================== 闯关 - 排序模式 ====================
-function renderSortChallenge(verse) {
-  const chunks = [...verse.sortChunks].sort(() => Math.random() - 0.5);
-  state.sortAnswer = [];
-  state.wrongAttempts = 0;
-
-  challengeCard.innerHTML = `
-    <div class="challenge-number">第 ${state.challengeIndex + 1} / ${VERSES.length} 关</div>
-    <span class="challenge-type-badge badge-sort">🔀 拼句排序</span>
-    <p class="sort-hint">按正确顺序点击词组，拼出完整诗句</p>
-    <div class="sort-target" id="sortTarget"></div>
-    <div class="sort-pool" id="sortPool">
-      ${chunks.map(c => `<span class="sort-chunk in-pool" data-chunk="${c}">${c}</span>`).join('')}
-    </div>
-    <div class="feedback" id="feedback"></div>
-    <button class="btn btn-primary btn-sm btn-next" id="btnNext">下一关 →</button>
-  `;
-
-  const sortTarget = $('#sortTarget');
-  const sortPool = $('#sortPool');
-  const feedback = $('#feedback');
-  const btnNext = $('#btnNext');
-
-  function renderSortState() {
-    sortTarget.innerHTML = state.sortAnswer.map((c, i) =>
-      `<span class="sort-chunk in-target" data-idx="${i}">${c}</span>`
-    ).join('');
-    sortPool.innerHTML = chunks
-      .filter(c => !state.sortAnswer.includes(c))
-      .map(c => `<span class="sort-chunk in-pool" data-chunk="${c}">${c}</span>`)
-      .join('');
-
-    if (state.sortAnswer.length > 0) {
-      sortTarget.classList.add('filled');
-    } else {
-      sortTarget.classList.remove('filled');
-    }
-
-    bindSortEvents();
-  }
-
-  function bindSortEvents() {
-    // 点击词池中的词 -> 加入答案
-    sortPool.querySelectorAll('.sort-chunk').forEach(el => {
-      el.addEventListener('click', () => {
-        if (state.sortAnswer.length >= verse.sortChunks.length) return;
-        state.sortAnswer.push(el.dataset.chunk);
-        renderSortState();
-        checkSortComplete();
-      });
-    });
-
-    // 点击答案中的词 -> 移回词池
-    sortTarget.querySelectorAll('.sort-chunk').forEach(el => {
-      el.addEventListener('click', () => {
-        const idx = parseInt(el.dataset.idx);
-        state.sortAnswer.splice(idx, 1);
-        renderSortState();
-      });
-    });
-  }
-
-  function checkSortComplete() {
-    if (state.sortAnswer.length === verse.sortChunks.length) {
-      const correct = verse.sortChunks.join('');
-      const userAnswer = state.sortAnswer.join('');
-      if (userAnswer === correct) {
-        state.score += 10 + state.combo * 2;
-        state.correctCount++;
-        state.combo++;
-        if (state.combo > state.maxCombo) state.maxCombo = state.combo;
-        feedback.className = 'feedback show success';
-        feedback.innerHTML = '✅ 排序正确！<span class="meaning-hint">' + verse.meaning + '</span>';
-        btnNext.classList.add('show');
-        updateProgress();
-        saveProgress();
-        // 禁用所有点击
-        sortPool.querySelectorAll('.sort-chunk').forEach(e => e.style.pointerEvents = 'none');
-        sortTarget.querySelectorAll('.sort-chunk').forEach(e => e.style.pointerEvents = 'none');
-      } else {
-        state.sortAnswer = [];
-        state.wrongAttempts++;
-        state.combo = 0;
-        feedback.className = 'feedback show error';
-        feedback.innerHTML = '❌ 顺序不对，再试试！<span class="meaning-hint">提示：' + verse.meaning + '</span>';
-        updateProgress();
-        saveProgress();
-      }
-    }
-  }
-
-  bindSortEvents();
-
-  btnNext.addEventListener('click', () => {
-    state.challengeIndex++;
-    if (state.challengeIndex >= VERSES.length) {
-      state.completed = true;
-      saveProgress();
-      showResult();
-    } else {
-      nextChallenge();
-    }
-    updateProgress();
-  });
-}
-
-// ==================== 下一关 ====================
-function nextChallenge() {
-  const verse = VERSES[state.challengeIndex];
-  // 交替填空和排序
-  if (state.challengeIndex % 2 === 0) {
-    renderFillChallenge(verse);
-  } else {
-    renderSortChallenge(verse);
-  }
-}
-
-// ==================== 开始闯关 ====================
-function startChallenge(fromIndex = 0) {
-  state.challengeIndex = fromIndex;
-  state.score = fromIndex > 0 ? state.score : 0;
-  state.correctCount = fromIndex > 0 ? state.correctCount : 0;
-  state.combo = 0;
-  state.maxCombo = fromIndex > 0 ? state.maxCombo : 0;
-  state.completed = false;
-  showPage('challenge');
-  nextChallenge();
-}
-
-// ==================== 结果页面 ====================
-function showResult() {
-  showPage('result');
-  const total = VERSES.length;
-  const pct = Math.round(state.correctCount / total * 100);
-
-  let icon, title;
-  if (pct >= 90) { icon = '🏆'; title = '诗词达人！'; }
-  else if (pct >= 70) { icon = '🌟'; title = '掌握得很棒！'; }
-  else if (pct >= 50) { icon = '👍'; title = '还需加油哦～'; }
-  else { icon = '📚'; title = '再来一次吧！'; }
-
-  $('#resultIcon').textContent = icon;
-  $('#resultTitle').textContent = title;
-  $('#resultScore').textContent = state.score + '分';
-  $('#resultCorrect').textContent = state.correctCount;
-  $('#resultTotal').textContent = total;
-  $('#resultCombo').textContent = state.maxCombo;
-
-  // 展示整首词
-  let poemHTML = '';
-  VERSES.forEach((v, i) => {
-    poemHTML += v.text;
-    if (i === 0 || i === 3 || i === 5 || i === 6) poemHTML += '<br>';
-  });
-  $('#resultPoem').innerHTML = poemHTML;
-}
-
-// ==================== 事件绑定 ====================
-$('#backBtn').addEventListener('click', () => {
-  if (state.currentPage === 'learn' || state.currentPage === 'challenge') {
-    showPage('home');
-  }
-});
-
-$('#btnLearn').addEventListener('click', () => {
-  showPage('learn');
-});
-
-$('#btnStart').addEventListener('click', () => {
-  clearProgress();
-  startChallenge(0);
-});
-
-$('#btnResume').addEventListener('click', () => {
-  loadProgress();
-  startChallenge(state.challengeIndex);
-});
-
-$('#btnLearnToChallenge').addEventListener('click', () => {
-  clearProgress();
-  startChallenge(0);
-});
-
-$('#btnReplay').addEventListener('click', () => {
-  clearProgress();
-  startChallenge(0);
-});
-
-$('#btnResultLearn').addEventListener('click', () => {
-  showPage('learn');
-});
-
-$('#btnBackHome').addEventListener('click', () => {
-  showPage('home');
-});
-
-// ==================== 初始化 ====================
-function init() {
-  createPetals();
-  buildLearnPage();
-  loadProgress();
-  // 初始显示首页
-  showPage('home');
-  updateHomeButtons();
-  updateProgress();
-}
-
-init();
+/* ===================== 启动 ===================== */
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+applyAge();
+renderPoemGrid();
+show('menu');
 </script>
 </body>
 </html>
